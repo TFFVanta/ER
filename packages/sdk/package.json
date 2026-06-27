@@ -9,6 +9,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@exotic/kernel": "0.1.0"
+    "@exotic/kernel": "0.1.0",
+    "@exotic/contracts": "0.1.0",
+    "@exotic/events": "0.1.0"
   }
 }
