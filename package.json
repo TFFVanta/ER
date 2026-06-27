@@ -7,7 +7,8 @@
     "exo": "node apps/forge/src/index.js",
     "build": "turbo build",
     "test": "turbo test",
-    "dev": "npm run exo -- help"
+    "dev": "npm run exo -- help",
+    "checkpoint": "node tooling/checkpoint.mjs"
   },
   "keywords": [],
   "author": "",
