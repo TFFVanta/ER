@@ -1,4 +1,7 @@
-export const identity = {
+export * from "@exotic/kernel";
+
+export const sdkIdentity = {
   name: "@exotic/sdk",
-  tagline: "Everything Is Exotic."
+  tagline: "Everything Is Exotic.",
+  includes: ["@exotic/kernel"]
 };
