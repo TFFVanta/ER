@@ -1,0 +1,31 @@
+{
+  "name": "exotic-root",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "exo": "node apps/forge/src/index.js",
+    "build": "turbo build",
+    "test": "turbo test",
+    "dev": "npm run exo -- help"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "eslint": "^10.6.0",
+    "prettier": "^3.8.5",
+    "tsx": "^4.22.4",
+    "turbo": "^2.10.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "packageManager": "npm@11.17.0"
+}

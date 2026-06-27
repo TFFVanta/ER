@@ -1,0 +1,14 @@
+{
+  "name": "@exotic/forge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "test": "echo TODO",
+    "start": "node src/index.js"
+  },
+  "bin": {
+    "exo": "src/index.js"
+  }
+}

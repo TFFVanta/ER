@@ -1,4 +1,4 @@
 export const identity = {
-  name: "@exotic/entity",
+  name: "@exotic/config",
   tagline: "Everything Is Exotic."
 };
