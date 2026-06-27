@@ -1,0 +1,19 @@
+{
+  "name": "@exotic/entity",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/index.ts",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo Testing @exotic/entity",
+    "build": "echo Building @exotic/entity"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
