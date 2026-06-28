@@ -10,3 +10,6 @@ export const sdkIdentity = {
   tagline: "Everything Is Exotic.",
   includes: ["@exotic/kernel", "@exotic/contracts", "@exotic/events"]
 };
+
+export { defineModel, defineTool, defineAgent, identity as aiIdentity } from "@exotic/ai";
+export type { ExoticModel, ExoticModelMessage, ExoticModelResponse, ExoticTool, ExoticAgent } from "@exotic/ai";
