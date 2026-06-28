@@ -33,3 +33,6 @@ export const identity = {
   name: "@exotic/kernel",
   tagline: "Everything Is Exotic."
 };
+
+export { createKernelRuntime } from "./runtime";
+export type { ExoticKernelRuntime } from "./runtime";

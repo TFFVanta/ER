@@ -13,3 +13,6 @@ export const sdkIdentity = {
 
 export { defineModel, defineTool, defineAgent, identity as aiIdentity } from "@exotic/ai";
 export type { ExoticModel, ExoticModelMessage, ExoticModelResponse, ExoticTool, ExoticAgent } from "@exotic/ai";
+
+export { createKernelRuntime } from "@exotic/kernel";
+export type { ExoticKernelRuntime } from "@exotic/kernel";
