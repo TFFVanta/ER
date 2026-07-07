@@ -1,0 +1,66 @@
+:root {
+  --ink: #050505;
+  --paper: #ffffff;
+  --soft: #f7f7f4;
+  --pink: #ff4fa3;
+  --yellow: #ffd834;
+  --blue: #5ec8ff;
+  --green: #38c172;
+  --orange: #ff9f1c;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--soft); color: var(--ink); }
+button, input { font: inherit; color: inherit; }
+.app-shell { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; gap: 18px; padding: 18px; }
+.card { background: var(--paper); border: 4px solid var(--ink); border-radius: 22px; }
+.hard-shadow { box-shadow: 8px 8px 0 var(--ink); }
+.sidebar { padding: 22px; position: sticky; top: 18px; height: calc(100vh - 36px); }
+.brand-mark { width: 70px; height: 70px; border: 4px solid var(--ink); border-radius: 18px; display: grid; place-items: center; background: var(--pink); box-shadow: 6px 6px 0 var(--ink); font-weight: 1000; font-size: 24px; }
+h1, h2, h3, h4, p { margin: 0; } h1 { margin-top: 18px; font-size: 38px; } h2 { font-size: 34px; } h3 { font-size: 24px; } h4 { display:flex; gap:8px; align-items:center; margin-top:22px; text-transform:uppercase; }
+.muted { color: #555; margin-top: 6px; } .eyebrow { font-size: 12px; font-weight: 1000; letter-spacing: .12em; color: #333; }
+nav { display: grid; gap: 10px; margin-top: 28px; }
+.nav { border: 3px solid var(--ink); background: #fff; border-radius: 16px; padding: 13px 14px; display: flex; align-items: center; gap: 10px; font-weight: 900; cursor:pointer; }
+.nav.active { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); }
+.workspace { display: grid; gap: 18px; }
+.topbar { padding: 20px 24px; display:flex; justify-content:space-between; align-items:center; }
+.command-button { border: 3px solid var(--ink); background: var(--blue); border-radius: 14px; padding: 12px 16px; font-weight: 1000; display:flex; gap:8px; align-items:center; box-shadow: 4px 4px 0 var(--ink); cursor:pointer; }
+.metrics-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.metric { padding: 18px; display:grid; gap: 10px; }
+.metric strong { font-size: 34px; } .metric span { font-weight: 900; }
+.metric-icon { width:42px; height:42px; border:3px solid var(--ink); border-radius:13px; display:grid; place-items:center; }
+.pink { background: var(--pink); } .yellow { background: var(--yellow); } .blue { background: var(--blue); }
+.progress-track { width:100%; height: 16px; border: 3px solid var(--ink); border-radius: 999px; overflow:hidden; background:#fff; }
+.progress-fill { height:100%; border-right: 3px solid var(--ink); }
+.live-card { padding:18px; display:flex; flex-direction:column; justify-content:center; gap:6px; background: var(--pink); }
+.live-card strong { font-size: 30px; }
+.main-grid { display:grid; grid-template-columns: 1.5fr .9fr; gap:18px; }
+.bottom-grid { display:grid; grid-template-columns: 1.45fr .75fr .75fr; gap:18px; }
+.panel-large, .panel { padding:20px; }
+.panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.search { display:flex; align-items:center; gap:8px; border:3px solid var(--ink); border-radius:14px; padding:8px 10px; background:#fff; }
+.search input { border:0; outline:0; min-width: 220px; }
+.project-list { display:grid; gap:12px; }
+.project-card { width:100%; text-align:left; border:3px solid var(--ink); background:#fff; border-radius:18px; padding:15px; display:grid; grid-template-columns: 1fr auto; gap:10px; cursor:pointer; }
+.project-card.selected { box-shadow: 5px 5px 0 var(--ink); transform: translate(-2px, -2px); }
+.project-card strong { font-size: 18px; } .project-card span { display:block; color:#555; margin-top:4px; }
+.project-card .progress-track { grid-column: 1 / -1; }
+.mini-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:16px; }
+.mini { border:3px solid var(--ink); border-radius:16px; padding:12px; } .mini span { display:block; font-size:12px; font-weight:900; } .mini strong { font-size:18px; }
+.milestones { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.milestones span { border:3px solid var(--ink); border-radius:999px; padding:8px 10px; font-weight:900; background:#fff; } .milestones .done { background: var(--green); }
+.task-columns { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+.task-column { border:3px solid var(--ink); border-radius:18px; padding:12px; background:#fafafa; min-height: 240px; }
+.task-column h4 { margin:0 0 10px; display:block; }
+.task-card { width:100%; border:3px solid var(--ink); background:#fff; border-radius:15px; padding:12px; text-align:left; margin-bottom:10px; cursor:pointer; }
+.task-card strong { display:block; } .task-card span { display:block; color:#555; margin-top:6px; font-size:13px; }
+.agent-list, .timeline { display:grid; gap:10px; margin-top:14px; }
+.agent, .timeline-item { border:3px solid var(--ink); border-radius:16px; padding:12px; display:flex; align-items:center; gap:10px; background:#fff; }
+.agent div, .timeline-item div { flex:1; } .agent span, .timeline-item span { display:block; color:#555; font-size:13px; }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.25); display:grid; place-items:start center; padding-top:8vh; }
+.palette { width:min(560px, 92vw); padding:20px; background:#fff; }
+.palette h3 { display:flex; gap:10px; align-items:center; margin-bottom:6px; }
+.palette button { width:100%; border:3px solid var(--ink); background:#fff; border-radius:15px; padding:13px; display:flex; justify-content:space-between; margin-top:10px; font-weight:900; cursor:pointer; }
+.palette button:hover { background: var(--yellow); }
+@media (max-width: 1100px) { .app-shell { grid-template-columns:1fr; } .sidebar { position:relative; height:auto; } .metrics-grid, .main-grid, .bottom-grid { grid-template-columns:1fr; } }
+@media (max-width: 700px) { .app-shell { padding:10px; } .topbar { align-items:flex-start; flex-direction:column; } .task-columns, .mini-grid { grid-template-columns:1fr; } h2 { font-size:26px; } }

@@ -1,17 +1,17 @@
 {
-  "name": "@exotic/sdk",
-  "version": "0.1.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@exotic/kernel": "0.1.0",
-    "@exotic/contracts": "0.1.0",
-    "@exotic/events": "0.1.0",
-    "@exotic/ai": "0.1.0"
-  }
+    "name":  "@exotic/sdk",
+    "version":  "0.1.0",
+    "type":  "module",
+    "scripts":  {
+                    "build":  "tsc -p tsconfig.json",
+                    "test":  "vitest run"
+                },
+    "dependencies":  {
+                         "@exotic/kernel":  "0.1.0",
+                         "@exotic/contracts":  "0.1.0",
+                         "@exotic/events":  "0.1.0",
+                         "@exotic/ai":  "0.1.0"
+                     },
+    "main":  "src/index.ts",
+    "types":  "src/index.ts"
 }

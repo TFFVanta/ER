@@ -1,0 +1,14 @@
+{
+    "name":  "@exotic/studio",
+    "version":  "0.1.0",
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "tsx src/main.ts"
+                },
+    "dependencies":  {
+                         "@exotic/core":  "0.1.0",
+                         "tsx":  "latest"
+                     },
+    "main":  "src/index.ts",
+    "types":  "src/index.ts"
+}

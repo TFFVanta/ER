@@ -1,0 +1,1 @@
+export type OptimizationMode = "balanced | performance | battery | cooling | network; export const ExoticOptimizer = { mode: balanced as OptimizationMode, safetyGate: true, boostLevel: 0.33, qualityScore: 1.0, run(mode: OptimizationMode = balanced) { this.mode = mode; return { status: optimized, mode, safetyGate: this.safetyGate, boostLevel: this.boostLevel }; } };

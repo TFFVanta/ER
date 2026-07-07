@@ -1,0 +1,21 @@
+{
+  "name": "exotic-sdk-core",
+  "version": "0.1.0",
+  "description": "Exotic SDK core: Universal Object Model, Universal State Model, Live Metadata Fabric, and Universal Memory Graph.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/demo/live-demo.ts",
+    "build": "tsc",
+    "start": "node dist/demo/live-demo.js"
+  },
+  "dependencies": {
+    "zod": "latest",
+    "nanoid": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "tsx": "latest",
+    "@types/node": "latest"
+  }
+}
+
