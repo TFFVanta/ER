@@ -1,0 +1,3 @@
+#include "cli.hpp"
+#include <iostream>
+namespace exotic::autonomy::governance {int run_governance_cli(GovernanceRepository&r,GovernanceService&s,std::span<const std::string_view>a){if(a.empty()||a[0]=="status"){std::cout<<"EXOTIC GOVERNANCE 0.4\nemergency_stop="<<(r.emergency_stop_active()?"active":"clear")<<"\npending="<<r.load_pending(Clock::now()).size()<<'\n';return 0;}if(a[0]=="requests"){for(auto&q:r.load_pending(Clock::now()))std::cout<<q.id<<" proposal="<<q.proposal_id<<" quorum="<<q.required_approvals<<'\n';return 0;}if(a[0]=="stop"){s.emergency_stop("cli","manual emergency stop");return 0;}if(a[0]=="resume"){s.clear_emergency_stop("cli","manual clearance");return 0;}std::cerr<<"usage: exotic governance [status|requests|stop|resume]\n";return 2;}}

@@ -1,0 +1,6 @@
+#include "autonomy_bridge.hpp"
+namespace exotic::autonomy::scheduler {
+AutonomyExecutionBridge::AutonomyExecutionBridge(AutonomyKernel&k,std::string a):kernel_(k),fallback_agent_id_(std::move(a)){}
+AutonomyExecutionBridge::AutonomyExecutionBridge(AutonomyKernel&k,AgentIdentityResolver r,std::string a):kernel_(k),resolver_(std::move(r)),fallback_agent_id_(std::move(a)){}
+ExecutionResult AutonomyExecutionBridge::execute(const Job&job,std::stop_token stop){if(stop.stop_requested())return{false,FailureClass::Cancelled,"shutdown requested"};auto decision=kernel_.evaluate_proposal(job.proposal_id);if(decision.decision==DecisionType::Deny)return{false,FailureClass::PolicyDenied,decision.reason};if(decision.decision!=DecisionType::Approve)return{false,FailureClass::Transient,decision.reason};auto agent=resolver_?resolver_():fallback_agent_id_;if(agent.empty())agent=fallback_agent_id_;auto operation=kernel_.execute_proposal(job.proposal_id,std::move(agent));if(!operation)return{false,FailureClass::Transient,"proposal could not start"};if(stop.stop_requested()){kernel_.cancel_operation(*operation);return{false,FailureClass::Cancelled,"shutdown requested"};}auto verification=kernel_.verify_operation(*operation);if(!verification.passed)return{false,FailureClass::VerificationFailed,"operation failed verification"};return{true,FailureClass::Permanent,"verified"};}
+}

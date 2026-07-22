@@ -1,0 +1,15 @@
+approval=verified
+decision_evidence=verified
+assignment=verified
+reservation=verified
+usage=verified
+operation=verified
+verification=verified
+autonomy_audit=verified
+runtime_audit=verified
+trace=verified
+metrics=verified
+dashboard=verified
+result=PASS
+dashboard_json=/tmp/exotic-live-smoke/.exotic/dashboards/runtime-status.json
+dashboard_text=/tmp/exotic-live-smoke/.exotic/dashboards/runtime-status.txt

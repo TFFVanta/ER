@@ -1,0 +1,11 @@
+#include "in_memory_telemetry.hpp"
+#include <algorithm>
+namespace exotic::runtime {
+std::uint64_t InMemoryTelemetryRepository::next_audit_id(){std::scoped_lock l{m_};return audit_id_++;}std::uint64_t InMemoryTelemetryRepository::next_alert_id(){std::scoped_lock l{m_};return alert_id_++;}
+void InMemoryTelemetryRepository::append_audit(const AuditRecord&v){std::scoped_lock l{m_};audit_.push_back(v);}std::vector<AuditRecord>InMemoryTelemetryRepository::load_audit(std::size_t n){std::scoped_lock l{m_};auto b=audit_.size()>n?audit_.end()-static_cast<std::ptrdiff_t>(n):audit_.begin();return{b,audit_.end()};}
+void InMemoryTelemetryRepository::save_trace(const TraceSpan&v){std::scoped_lock l{m_};traces_[v.span_id]=v;}std::vector<TraceSpan>InMemoryTelemetryRepository::load_traces(std::size_t n){std::scoped_lock l{m_};std::vector<TraceSpan>r;for(auto&[k,v]:traces_)r.push_back(v);if(r.size()>n)r.erase(r.begin(),r.end()-static_cast<std::ptrdiff_t>(n));return r;}
+void InMemoryTelemetryRepository::append_metric(const MetricSample&v){std::scoped_lock l{m_};metrics_.push_back(v);}std::vector<MetricSample>InMemoryTelemetryRepository::load_metrics(std::string_view name,std::size_t n){std::scoped_lock l{m_};std::vector<MetricSample>r;for(auto it=metrics_.rbegin();it!=metrics_.rend()&&r.size()<n;++it)if(name.empty()||it->name==name)r.push_back(*it);std::reverse(r.begin(),r.end());return r;}
+void InMemoryTelemetryRepository::save_alert(const AlertRecord&v){std::scoped_lock l{m_};alerts_[v.id]=v;}std::vector<AlertRecord>InMemoryTelemetryRepository::load_active_alerts(){std::scoped_lock l{m_};std::vector<AlertRecord>r;for(auto&[id,v]:alerts_)if(v.active)r.push_back(v);return r;}
+void InMemoryTelemetryRepository::save_service_health(const ServiceHealth&v,std::string_view){std::scoped_lock l{m_};health_[v.service]=v;}std::vector<ServiceHealth>InMemoryTelemetryRepository::load_service_health(){std::scoped_lock l{m_};std::vector<ServiceHealth>r;for(auto&[n,v]:health_)r.push_back(v);return r;}
+void InMemoryTelemetryRepository::set_control(const ControlRecord&v){std::scoped_lock l{m_};controls_[v.key]=v;}std::optional<ControlRecord>InMemoryTelemetryRepository::get_control(std::string_view k){std::scoped_lock l{m_};auto i=controls_.find(std::string{k});return i==controls_.end()?std::nullopt:std::optional<ControlRecord>{i->second};}
+}

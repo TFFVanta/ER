@@ -1,0 +1,2 @@
+#include "failure_injection.hpp"
+namespace exotic::runtime {void FailureInjector::arm(std::string p,std::size_t h){std::scoped_lock l{m_};points_[std::move(p)]=h;}void FailureInjector::clear(){std::scoped_lock l{m_};points_.clear();}void FailureInjector::check(std::string_view p){std::scoped_lock l{m_};auto i=points_.find(std::string{p});if(i==points_.end())return;if(i->second>1){--i->second;return;}points_.erase(i);throw InjectedFailure("failure injection: "+std::string{p});}}

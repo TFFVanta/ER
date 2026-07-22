@@ -1,0 +1,3 @@
+#pragma once
+#include "telemetry_repository.hpp"
+namespace exotic::runtime {class ControlPlane{public:ControlPlane(TelemetryRepository&,std::string workspace_id);void request_shutdown(std::string actor,std::string reason);void request_emergency_stop(std::string actor,std::string reason);void request_emergency_clear(std::string actor,std::string reason);bool shutdown_requested();std::optional<ControlRecord> emergency_request();void clear_command(std::string_view key);private:TelemetryRepository&repo_;std::string workspace_id_;void set(std::string key,std::string value,std::string actor,std::string reason);};}

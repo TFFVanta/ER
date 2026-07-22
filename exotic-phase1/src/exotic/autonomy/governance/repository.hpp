@@ -1,0 +1,5 @@
+#pragma once
+#include "types.hpp"
+namespace exotic::autonomy::governance {
+class GovernanceRepository{public:virtual~GovernanceRepository()=default;virtual ApprovalRequestId next_request_id()=0;virtual DecisionId next_decision_id()=0;virtual GrantId next_grant_id()=0;virtual PolicyId next_policy_id()=0;virtual EvidenceId next_evidence_id()=0;virtual void save_request(const ApprovalRequest&)=0;virtual std::optional<ApprovalRequest> load_request(ApprovalRequestId)=0;virtual std::vector<ApprovalRequest> load_pending(TimePoint)=0;virtual void append_decision(const ApprovalDecision&)=0;virtual std::vector<ApprovalDecision> load_decisions(ApprovalRequestId)=0;virtual void save_grant(const CapabilityGrant&)=0;virtual std::vector<CapabilityGrant> load_grants(std::string_view)=0;virtual void save_policy(const PolicyVersion&)=0;virtual std::vector<PolicyVersion> load_active_policies()=0;virtual void append_evidence(const DecisionEvidence&)=0;virtual std::vector<DecisionEvidence> load_evidence(ApprovalRequestId)=0;virtual void set_emergency_stop(bool,std::string_view,std::string_view)=0;virtual bool emergency_stop_active()=0;};
+}
