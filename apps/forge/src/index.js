@@ -207,6 +207,7 @@ function objectiveHelp() {
     '  selector draft-proposal <selector-id>',
     '  selector admit-proposal <selector-id>',
     '  selector execute-proposal <selector-id>',
+    '  selector learn-execution <selector-id>',
     ''
   ].join(nl));
 }
@@ -638,6 +639,29 @@ function selectorCommand(argv) {
     return;
   }
 
+  if (subcommand === 'learn-execution') {
+    const id = rest[0];
+    if (!id) {
+      console.error('Missing selector id. Usage: exo selector learn-execution <selector-id>');
+      process.exit(1);
+    }
+    const result = store.learnFromSelectorExecution(id, {
+      actor: values.actor,
+      approver: values.approver || 'operator',
+      owner: values.owner,
+      title: values.title,
+      summary: values.summary,
+      idempotencyKey: values['idempotency-key']
+    });
+    console.log(`${result.idempotentReplay ? 'Reused lesson' : 'Learned execution'} ${result.lesson.id}`);
+    console.log(`Selector: ${result.selector.id}`);
+    console.log(`Operation: ${result.operation.id}`);
+    console.log(`Next objective: ${result.lesson.next_objective.title}`);
+    console.log(`Run: ${result.runId}`);
+    console.log(`Bundle: ${result.bundlePath}`);
+    return;
+  }
+
   objectiveHelp();
 }
 
@@ -671,6 +695,7 @@ function help() {
     '  selector draft-proposal <selector-id>',
     '  selector admit-proposal <selector-id>',
     '  selector execute-proposal <selector-id>',
+    '  selector learn-execution <selector-id>',
     '  new package <name>',
     '  build',
     '  help',

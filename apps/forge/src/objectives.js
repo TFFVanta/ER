@@ -55,7 +55,52 @@ function titleFromGoal(goal) {
 }
 
 function summarizeGoal(goal) {
-  return goal.replace(/\s+/g, ' ').trim();
+  return String(goal || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeObjectiveStem(title) {
+  const normalized = summarizeGoal(title);
+  if (!normalized) return 'the objective';
+
+  const exactSuffix = ' with deeper verification or broader scope';
+  let stem = normalized;
+
+  while (stem.toLowerCase().startsWith('extend ')) {
+    stem = stem.slice(7).trim();
+  }
+
+  while (stem.toLowerCase().endsWith(exactSuffix)) {
+    stem = stem.slice(0, -exactSuffix.length).trim();
+  }
+
+  return stem || 'the objective';
+}
+
+function buildNextObjectiveTitle(title) {
+  return `Extend ${normalizeObjectiveStem(title).toLowerCase()} with deeper verification or broader scope`;
+}
+
+function buildNextObjectiveRationale(rationale) {
+  return summarizeGoal(rationale)
+    || 'The current slice is verified; the next improvement should broaden real execution coverage while preserving admission and evidence.';
+}
+
+function buildLessonFindings(findings) {
+  if (Array.isArray(findings)) {
+    const normalized = findings
+      .map(item => summarizeGoal(item))
+      .filter(Boolean)
+      .slice(0, 5);
+    if (normalized.length) {
+      return normalized;
+    }
+  }
+
+  return [
+    'Admitted proposals can be executed safely when authority and budget checks are persisted first.',
+    'Idempotency keys prevent duplicate operation records during retries or replays.',
+    'Verification artifacts make the execution outcome reviewable and restart-safe.'
+  ];
 }
 
 function nextIdeaFor(objective) {
@@ -198,6 +243,18 @@ function nextIdeaForExecutedSelectorProposal(operation, selector) {
     operation_id: operation.id,
     title: `Capture learning from selector execution ${operation.title.toLowerCase()}`,
     rationale: 'The restarted selector proposal has executed successfully, so the next safe step is to preserve lessons and keep the loop going.',
+    created_at: nowIso()
+  };
+}
+
+function nextIdeaForSelectorLearning(lesson, selector) {
+  return {
+    id: `idea-selector-learning-${lesson.id}`,
+    objective_id: lesson.objective_id,
+    selector_id: selector.id,
+    lesson_id: lesson.id,
+    title: `Promote the restarted lesson from ${selector.promoted_title.toLowerCase()}`,
+    rationale: 'The restarted selector execution now has its own lesson, so the next safe step is to promote that lesson into the following bounded candidate.',
     created_at: nowIso()
   };
 }
@@ -705,9 +762,9 @@ export function createObjectiveStore(root) {
     const summary = summarizeGoal(options.summary || '') || 'Bounded execution with explicit authority, budget admission, and idempotent verification produced a reusable improvement pattern.';
     const nextObjective = {
       id: `next-objective-${lessonId}`,
-      title: `Extend ${objective.title.toLowerCase()} with deeper verification or broader scope`,
-      rationale: 'The current slice is verified; the next improvement should broaden real execution coverage while preserving admission and evidence.',
-      suggested_capability: 'learning-driven-next-slice'
+      title: buildNextObjectiveTitle(objective.title),
+      rationale: buildNextObjectiveRationale(options.nextObjectiveRationale),
+      suggested_capability: summarizeGoal(options.nextObjectiveSuggestedCapability || '') || 'learning-driven-next-slice'
     };
 
     const lesson = {
@@ -718,11 +775,7 @@ export function createObjectiveStore(root) {
       operation_id: operation.id,
       title: `Lesson from ${operation.title}`,
       summary,
-      findings: [
-        'Admitted proposals can be executed safely when authority and budget checks are persisted first.',
-        'Idempotency keys prevent duplicate operation records during retries or replays.',
-        'Verification artifacts make the execution outcome reviewable and restart-safe.'
-      ],
+      findings: buildLessonFindings(options.findings),
       next_objective: nextObjective,
       status: 'captured',
       created_at: createdAt,
@@ -813,6 +866,7 @@ export function createObjectiveStore(root) {
       source_objective_id: sourceObjective.id,
       promoted_title: promotedTitle,
       promoted_summary: lesson.next_objective?.rationale || lesson.summary,
+      promoted_findings: buildLessonFindings(lesson.findings),
       suggested_capability: lesson.next_objective?.suggested_capability || 'promoted-from-lesson',
       authority_level: preservedAuthority,
       budget: promotedBudget,
@@ -1259,6 +1313,97 @@ export function createObjectiveStore(root) {
       operation: refreshedOperation,
       bundlePath,
       runId: refreshedOperation.run_id,
+      idempotentReplay: false
+    };
+  }
+
+  function learnFromSelectorExecution(selectorId, options = {}) {
+    if (!selectorId) {
+      throw new Error('Selector id is required.');
+    }
+
+    const execution = executeAdmittedSelectorProposal(selectorId, {
+      actor: options.actor,
+      approver: options.approver || 'operator',
+      owner: options.owner,
+      title: options.title,
+      summary: options.summary,
+      idempotencyKey: options.idempotencyKey
+    });
+
+    const state = loadState();
+    const selector = state.selectors.find(item => item.id === selectorId);
+    const operation = state.operations.find(item => item.id === execution.operation.id);
+    const proposal = state.proposals.find(item => item.id === execution.proposal.id);
+    const objective = state.objectives.find(item => item.id === execution.objective.id);
+    if (!selector || !operation || !proposal || !objective) {
+      throw new Error(`Selector learning context missing for: ${selectorId}`);
+    }
+
+    if (selector.learned_lesson_id) {
+      const existingLesson = state.lessons.find(item => item.id === selector.learned_lesson_id) || null;
+      return {
+        selector,
+        objective,
+        proposal,
+        operation,
+        lesson: existingLesson,
+        bundlePath: selector.learning_bundle_path || existingLesson?.bundle_path || selector.execution_bundle_path,
+        runId: selector.learning_run_id || existingLesson?.run_id || selector.execution_run_id,
+        idempotentReplay: true
+      };
+    }
+
+    const learned = learnFromOperation(operation.id, {
+      summary: options.summary || `Selector ${selector.id} execution verified a restarted loop slice that should be preserved as reusable EXOTIC lineage.`,
+      findings: selector.promoted_findings,
+      nextObjectiveRationale: selector.promoted_summary,
+      nextObjectiveSuggestedCapability: selector.suggested_capability
+    });
+
+    const refreshedState = loadState();
+    const refreshedSelector = refreshedState.selectors.find(item => item.id === selectorId);
+    const refreshedObjective = refreshedState.objectives.find(item => item.id === objective.id);
+    const refreshedProposal = refreshedState.proposals.find(item => item.id === proposal.id);
+    const refreshedOperation = refreshedState.operations.find(item => item.id === operation.id);
+    const refreshedLesson = refreshedState.lessons.find(item => item.id === learned.lesson.id);
+    if (!refreshedSelector || !refreshedObjective || !refreshedProposal || !refreshedOperation || !refreshedLesson) {
+      throw new Error(`Selector learning refresh missing for: ${selectorId}`);
+    }
+
+    refreshedSelector.status = 'learned';
+    refreshedSelector.updated_at = refreshedLesson.updated_at;
+    refreshedSelector.learned_lesson_id = refreshedLesson.id;
+    refreshedSelector.learning_run_id = refreshedLesson.run_id;
+
+    refreshedObjective.recommendations = [
+      `Promote restarted lesson ${refreshedLesson.id} from selector ${refreshedSelector.id}.`,
+      'Keep the next restarted loop within the same preserved selector boundaries unless a new approval expands them.'
+    ];
+    refreshedObjective.updated_at = refreshedLesson.updated_at;
+
+    const bundlePath = writeSelectorLearningReviewBundle(
+      path.join(resolveStateRoot(root), '.exotic'),
+      refreshedLesson.run_id,
+      refreshedObjective,
+      refreshedSelector,
+      refreshedProposal,
+      refreshedOperation,
+      refreshedLesson
+    );
+    refreshedSelector.learning_bundle_path = bundlePath;
+    saveState(refreshedState);
+    ensureDir(path.dirname(latestReviewFile));
+    fs.writeFileSync(latestReviewFile, bundlePath + '\n');
+
+    return {
+      selector: refreshedSelector,
+      objective: refreshedObjective,
+      proposal: refreshedProposal,
+      operation: refreshedOperation,
+      lesson: refreshedLesson,
+      bundlePath,
+      runId: refreshedLesson.run_id,
       idempotentReplay: false
     };
   }
@@ -2257,6 +2402,113 @@ export function createObjectiveStore(root) {
     return bundlePath;
   }
 
+  function writeSelectorLearningReviewBundle(exoticRoot, runId, objective, selector, proposal, operation, lesson) {
+    const bundlePath = path.join(runsDir, runId);
+    const summaryPath = path.join(bundlePath, 'summary.md');
+    const manifestPath = path.join(bundlePath, 'manifest.json');
+    const verificationPath = path.join(bundlePath, 'verification.json');
+    const nextIdeasPath = path.join(bundlePath, 'next-ideas.json');
+    const eventsPath = path.join(bundlePath, 'events.jsonl');
+    const decisionsPath = path.join(bundlePath, 'decisions.jsonl');
+    const operationsPath = path.join(bundlePath, 'operations.jsonl');
+
+    ensureDir(path.join(bundlePath, 'artifacts'));
+    ensureDir(path.join(bundlePath, 'logs'));
+    ensureDir(path.join(bundlePath, 'patches'));
+
+    const nextIdea = nextIdeaForSelectorLearning(lesson, selector);
+    const verification = {
+      objective_id: objective.id,
+      selector_id: selector.id,
+      proposal_id: proposal.id,
+      operation_id: operation.id,
+      lesson_id: lesson.id,
+      verdict: 'pass',
+      acceptance: [
+        {
+          criterion_id: `${lesson.id}:ac:selector-learning-persisted`,
+          verdict: 'pass',
+          evidence: path.join(exoticRoot, 'state', 'objectives.json')
+        },
+        {
+          criterion_id: `${lesson.id}:ac:selector-linked-to-lesson`,
+          verdict: 'pass',
+          evidence: selector.learned_lesson_id || lesson.id
+        }
+      ],
+      verified_at: nowIso()
+    };
+
+    const lessonArtifactPath = path.join(bundlePath, 'artifacts', 'selector-lesson.json');
+    writeJson(lessonArtifactPath, lesson);
+
+    fs.writeFileSync(summaryPath, [
+      '# Selector Learning Review',
+      '',
+      `- Objective: ${objective.id}`,
+      `- Selector: ${selector.id}`,
+      `- Proposal: ${proposal.id}`,
+      `- Operation: ${operation.id}`,
+      `- Lesson: ${lesson.id}`,
+      `- Status: ${selector.status}`,
+      ''
+    ].join('\n'));
+
+    writeJson(manifestPath, {
+      run_id: runId,
+      status: 'completed',
+      objective_id: objective.id,
+      selector_id: selector.id,
+      proposal_id: proposal.id,
+      operation_id: operation.id,
+      lesson_id: lesson.id,
+      bundle_path: bundlePath,
+      started_at: lesson.created_at,
+      completed_at: lesson.updated_at
+    });
+
+    writeJson(verificationPath, verification);
+    writeJson(nextIdeasPath, [nextIdea]);
+    appendJsonl(eventsPath, {
+      id: `${runId}:event:selector-learning`,
+      objective_id: objective.id,
+      selector_id: selector.id,
+      proposal_id: proposal.id,
+      operation_id: operation.id,
+      lesson_id: lesson.id,
+      type: 'selector.execution_learned',
+      created_at: lesson.created_at,
+      payload: {
+        next_objective_id: lesson.next_objective?.id || null
+      }
+    });
+    appendJsonl(decisionsPath, {
+      id: `${runId}:decision:selector-learning`,
+      objective_id: objective.id,
+      selector_id: selector.id,
+      proposal_id: proposal.id,
+      operation_id: operation.id,
+      lesson_id: lesson.id,
+      type: 'selector.learning_saved',
+      created_at: lesson.created_at,
+      rationale: 'The restarted selector execution produced verified evidence strong enough to preserve as its own lesson for the next restarted cycle.'
+    });
+    appendJsonl(operationsPath, {
+      id: `${runId}:operation:selector-learning`,
+      objective_id: objective.id,
+      selector_id: selector.id,
+      proposal_id: proposal.id,
+      operation_id: operation.id,
+      lesson_id: lesson.id,
+      type: 'lesson.persisted_from_selector',
+      status: 'completed',
+      created_at: lesson.created_at,
+      artifact_refs: [summaryPath, manifestPath, verificationPath, lessonArtifactPath]
+    });
+
+    return bundlePath;
+  }
+
   function listObjectives() {
     return loadState().objectives || [];
   }
@@ -2328,6 +2580,7 @@ export function createObjectiveStore(root) {
     materializeSelector,
     draftProposalFromSelector,
     admitDraftedSelectorProposal,
-    executeAdmittedSelectorProposal
+    executeAdmittedSelectorProposal,
+    learnFromSelectorExecution
   };
 }

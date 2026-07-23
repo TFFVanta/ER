@@ -924,3 +924,195 @@ test('selector can execute its admitted proposal through the bounded operation p
   assert.ok(fs.existsSync(path.join(bundlePath, 'verification.json')));
   assert.ok(fs.existsSync(path.join(bundlePath, 'artifacts', 'selector-execution.json')));
 });
+
+test('selector can learn from its executed restarted proposal', () => {
+  const stateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'exotic-selector-learn-pass-'));
+  const createObjective = run(['objective', 'create', 'Make the scheduler more reliable.', '--time-minutes', '60'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(createObjective.status, 0, createObjective.stderr);
+  const sourceObjectiveId = createObjective.stdout.match(/Created objective ([^\r\n]+)/)?.[1];
+  assert.ok(sourceObjectiveId, createObjective.stdout);
+
+  const createProposal = run([
+    'proposal',
+    'create',
+    sourceObjectiveId,
+    '--time-minutes',
+    '30',
+    'Inspect scheduler failure points. Implement a targeted retry improvement. Verify stability with focused tests.'
+  ], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(createProposal.status, 0, createProposal.stderr);
+  const proposalId = createProposal.stdout.match(/Created proposal ([^\r\n]+)/)?.[1];
+  assert.ok(proposalId, createProposal.stdout);
+
+  assert.equal(run(['proposal', 'admit', proposalId, '--approver', 'mingo', '--authority', '1'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  }).status, 0);
+  const execute = run(['proposal', 'execute', proposalId, '--idempotency-key', 'retry-improvement-1'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(execute.status, 0, execute.stderr);
+  const operationId = execute.stdout.match(/Created operation ([^\r\n]+)/)?.[1];
+  assert.ok(operationId, execute.stdout);
+
+  const learn = run(['operation', 'learn', operationId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(learn.status, 0, learn.stderr);
+  const lessonId = learn.stdout.match(/Captured lesson ([^\r\n]+)/)?.[1];
+  assert.ok(lessonId, learn.stdout);
+
+  const promote = run(['lesson', 'promote', lessonId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(promote.status, 0, promote.stderr);
+  const selectorId = promote.stdout.match(/Created selector ([^\r\n]+)/)?.[1];
+  assert.ok(selectorId, promote.stdout);
+
+  const stateFile = path.join(stateRoot, '.exotic', 'state', 'objectives.json');
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+  const selector = state.selectors.find(item => item.id === selectorId);
+  assert.ok(selector, selectorId);
+  selector.promoted_summary = 'Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop.';
+  selector.promoted_findings = [
+    'Retry boundaries stayed inside admitted scope during restarted execution.',
+    'Verification evidence remained reviewable across selector restarts.'
+  ];
+  selector.suggested_capability = 'selector-lineage-expansion';
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2) + '\n');
+
+  const selectorLearn = run(['selector', 'learn-execution', selectorId, '--approver', 'mingo'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(selectorLearn.status, 0, selectorLearn.stderr);
+  assert.match(selectorLearn.stdout, /Learned execution /);
+  assert.match(selectorLearn.stdout, /Next objective: /);
+
+  const selectorLessonId = selectorLearn.stdout.match(/Learned execution ([^\r\n]+)/)?.[1];
+  assert.ok(selectorLessonId, selectorLearn.stdout);
+
+  const learnAgain = run(['selector', 'learn-execution', selectorId, '--approver', 'mingo'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(learnAgain.status, 0, learnAgain.stderr);
+  assert.match(learnAgain.stdout, /Reused lesson /);
+  assert.match(learnAgain.stdout, new RegExp(selectorLessonId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+  const inspectLesson = run(['lesson', 'inspect', selectorLessonId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(inspectLesson.status, 0, inspectLesson.stderr);
+  assert.match(inspectLesson.stdout, /"status": "captured"/);
+  assert.match(inspectLesson.stdout, /Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop\./);
+  assert.match(inspectLesson.stdout, /selector-lineage-expansion/);
+  assert.match(inspectLesson.stdout, /Retry boundaries stayed inside admitted scope during restarted execution\./);
+  assert.match(inspectLesson.stdout, /Verification evidence remained reviewable across selector restarts\./);
+
+  const inspectSelector = run(['selector', 'inspect', selectorId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(inspectSelector.status, 0, inspectSelector.stderr);
+  assert.match(inspectSelector.stdout, /"status": "learned"/);
+  assert.match(inspectSelector.stdout, /"learned_lesson_id"/);
+
+  const bundlePath = selectorLearn.stdout.match(/Bundle: ([^\r\n]+)/)?.[1];
+  assert.ok(bundlePath, selectorLearn.stdout);
+  assert.ok(fs.existsSync(path.join(bundlePath, 'manifest.json')));
+  assert.ok(fs.existsSync(path.join(bundlePath, 'summary.md')));
+  assert.ok(fs.existsSync(path.join(bundlePath, 'verification.json')));
+  assert.ok(fs.existsSync(path.join(bundlePath, 'artifacts', 'selector-lesson.json')));
+});
+
+test('restarted lessons do not recursively duplicate the next-objective title prefix', () => {
+  const stateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'exotic-title-drift-'));
+  const createObjective = run(['objective', 'create', 'Make the scheduler more reliable.', '--time-minutes', '60'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(createObjective.status, 0, createObjective.stderr);
+  const sourceObjectiveId = createObjective.stdout.match(/Created objective ([^\r\n]+)/)?.[1];
+  assert.ok(sourceObjectiveId, createObjective.stdout);
+
+  const createProposal = run([
+    'proposal',
+    'create',
+    sourceObjectiveId,
+    '--time-minutes',
+    '30',
+    'Inspect scheduler failure points. Implement a targeted retry improvement. Verify stability with focused tests.'
+  ], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(createProposal.status, 0, createProposal.stderr);
+  const proposalId = createProposal.stdout.match(/Created proposal ([^\r\n]+)/)?.[1];
+  assert.ok(proposalId, createProposal.stdout);
+
+  assert.equal(run(['proposal', 'admit', proposalId, '--approver', 'mingo', '--authority', '1'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  }).status, 0);
+  const execute = run(['proposal', 'execute', proposalId, '--idempotency-key', 'retry-improvement-1'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(execute.status, 0, execute.stderr);
+  const operationId = execute.stdout.match(/Created operation ([^\r\n]+)/)?.[1];
+  assert.ok(operationId, execute.stdout);
+
+  const firstLearn = run(['operation', 'learn', operationId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(firstLearn.status, 0, firstLearn.stderr);
+  const firstLessonId = firstLearn.stdout.match(/Captured lesson ([^\r\n]+)/)?.[1];
+  assert.ok(firstLessonId, firstLearn.stdout);
+
+  const promote = run(['lesson', 'promote', firstLessonId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(promote.status, 0, promote.stderr);
+  const selectorId = promote.stdout.match(/Created selector ([^\r\n]+)/)?.[1];
+  assert.ok(selectorId, promote.stdout);
+
+  const stateFile = path.join(stateRoot, '.exotic', 'state', 'objectives.json');
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+  const selector = state.selectors.find(item => item.id === selectorId);
+  assert.ok(selector, selectorId);
+  selector.promoted_summary = 'Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop.';
+  selector.promoted_findings = [
+    'Retry boundaries stayed inside admitted scope during restarted execution.',
+    'Verification evidence remained reviewable across selector restarts.'
+  ];
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2) + '\n');
+
+  const selectorLearn = run(['selector', 'learn-execution', selectorId, '--approver', 'mingo'], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(selectorLearn.status, 0, selectorLearn.stderr);
+  const secondLessonId = selectorLearn.stdout.match(/Learned execution ([^\r\n]+)/)?.[1];
+  assert.ok(secondLessonId, selectorLearn.stdout);
+
+  const inspectSecondLesson = run(['lesson', 'inspect', secondLessonId], {
+    env: { EXOTIC_STATE_ROOT: stateRoot }
+  });
+  assert.equal(inspectSecondLesson.status, 0, inspectSecondLesson.stderr);
+  assert.doesNotMatch(
+    inspectSecondLesson.stdout,
+    /Extend extend make the scheduler more reliable with deeper verification or broader scope with deeper verification or broader scope/
+  );
+  assert.match(
+    inspectSecondLesson.stdout,
+    /"title": "Extend make the scheduler more reliable with deeper verification or broader scope"/
+  );
+  assert.match(
+    inspectSecondLesson.stdout,
+    /Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop\./
+  );
+  assert.match(
+    inspectSecondLesson.stdout,
+    /Retry boundaries stayed inside admitted scope during restarted execution\./
+  );
+  assert.match(
+    inspectSecondLesson.stdout,
+    /Verification evidence remained reviewable across selector restarts\./
+  );
+});
