@@ -1,0 +1,2 @@
+Copy the compiled Exotic binary here as exotic.exe
+Expected command: exotic.exe platform

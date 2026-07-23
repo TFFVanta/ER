@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(EXOTIC LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable(EXOTIC WIN32 src/main.cpp src/resources.rc)
+target_compile_definitions(EXOTIC PRIVATE UNICODE _UNICODE NOMINMAX)
+target_link_libraries(EXOTIC PRIVATE user32 gdi32 gdiplus shell32 ole32)
+set_target_properties(EXOTIC PROPERTIES OUTPUT_NAME "EXOTIC")

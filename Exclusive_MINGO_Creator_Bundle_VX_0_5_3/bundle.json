@@ -1,0 +1,23 @@
+{
+  "product": "EXOTIC",
+  "bundle": "Exclusive MINGO Creator Bundle",
+  "version": "VX.0.5.3",
+  "edition": "Workspace Preview",
+  "publisher": "MINGO",
+  "tagline": "Everything is Exotic.",
+  "production_ready": false,
+  "features": [
+    "Persistent local workspace",
+    "Editable projects and tasks",
+    "Project progress calculation",
+    "Import and export workspace JSON",
+    "Command palette",
+    "Auto-port local launcher",
+    "Native runtime bridge"
+  ],
+  "entrypoints": {
+    "main": "Launch-Exotic.cmd",
+    "studio": "Launch-Studio.cmd",
+    "native": "app/bin/exotic.exe"
+  }
+}
