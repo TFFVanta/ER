@@ -1006,6 +1006,7 @@ test('selector can learn from its executed restarted proposal', () => {
   });
   assert.equal(inspectLesson.status, 0, inspectLesson.stderr);
   assert.match(inspectLesson.stdout, /"status": "captured"/);
+  assert.match(inspectLesson.stdout, /Restarted selector execution preserved this verified direction: Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop\./);
   assert.match(inspectLesson.stdout, /Preserve the verified retry pattern while expanding failure-mode evidence in the restarted loop\./);
   assert.match(inspectLesson.stdout, /selector-lineage-expansion/);
   assert.match(inspectLesson.stdout, /Retry boundaries stayed inside admitted scope during restarted execution\./);

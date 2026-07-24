@@ -103,6 +103,20 @@ function buildLessonFindings(findings) {
   ];
 }
 
+function buildRestartedLessonSummary(selector, summary) {
+  const explicitSummary = summarizeGoal(summary);
+  if (explicitSummary) {
+    return explicitSummary;
+  }
+
+  const promotedSummary = summarizeGoal(selector?.promoted_summary);
+  if (promotedSummary) {
+    return `Restarted selector execution preserved this verified direction: ${promotedSummary}`;
+  }
+
+  return `Selector ${selector?.id || 'unknown-selector'} execution verified a restarted loop slice that should be preserved as reusable EXOTIC lineage.`;
+}
+
 function nextIdeaFor(objective) {
   return {
     id: `idea-${objective.id}`,
@@ -1355,7 +1369,7 @@ export function createObjectiveStore(root) {
     }
 
     const learned = learnFromOperation(operation.id, {
-      summary: options.summary || `Selector ${selector.id} execution verified a restarted loop slice that should be preserved as reusable EXOTIC lineage.`,
+      summary: buildRestartedLessonSummary(selector, options.summary),
       findings: selector.promoted_findings,
       nextObjectiveRationale: selector.promoted_summary,
       nextObjectiveSuggestedCapability: selector.suggested_capability
