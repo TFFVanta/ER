@@ -7,11 +7,16 @@
     "exo": "node apps/forge/src/index.js",
     "build": "turbo build",
     "test": "turbo test",
+    "verify": "npm run build && npm test && npm --prefix exotic-operations-console-v1.0 run verify && node tooling/record-verification.mjs",
+    "verify:clean": "turbo build --force && turbo test --force && npm --prefix exotic-operations-console-v1.0 run verify && node tooling/record-verification.mjs --clean",
     "dev": "npm run exo -- help",
     "checkpoint": "node tooling/checkpoint.mjs",
     "portal:dev": "vite",
-    "portal:build": "vite build",
-    "portal:preview": "vite preview"
+    "portal:build": "vite build && node tooling/build-portal-artifacts.mjs",
+    "portal:preview": "vite preview",
+    "portal:test": "vitest run src/portalConfig.test.js",
+    "portal:verify": "npm run portal:test && npm run portal:build",
+    "portal:health": "node tooling/check-frontend-health.mjs"
   },
   "keywords": [],
   "author": "",

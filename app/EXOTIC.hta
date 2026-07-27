@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>EXOTIC</title>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<title>EXOTIC Operations Console</title>
 <HTA:APPLICATION
   ID="EXOTIC"
   APPLICATIONNAME="EXOTIC"
@@ -18,119 +19,1017 @@
   WINDOWSTATE="maximize"
 />
 <style>
-*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Segoe UI,Arial,sans-serif;background:#f4f4ef;color:#111}
-button,input{font:inherit}.app{height:100%;display:grid;grid-template-columns:230px 1fr;grid-template-rows:76px 1fr}
-.top{grid-column:1/3;background:#fff;border-bottom:3px solid #111;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;object-fit:contain;border:2px solid #111;border-radius:10px}
-.brandText b{display:block;font-size:20px;letter-spacing:2px}.brandText span{font-size:10px;font-weight:800;letter-spacing:4px}
-.search{width:45%;height:42px;border:2px solid #111;border-radius:11px;background:#f7f7f4;display:flex;align-items:center;padding:0 13px;color:#666}
-.search input{width:100%;border:0;outline:0;background:transparent;margin-left:8px}
-.user{display:flex;align-items:center;gap:10px}.bell,.avatar{width:42px;height:42px;border:2px solid #111;border-radius:11px;background:#fff;display:grid;place-items:center;font-weight:900}.avatar{border-radius:50%;background:#f4ef73}
-.side{background:#fff;border-right:3px solid #111;padding:18px 14px;display:flex;flex-direction:column;justify-content:space-between}
-.nav button{width:100%;padding:11px 12px;margin-bottom:7px;border:2px solid transparent;border-radius:10px;background:#fff;text-align:left;font-weight:800;cursor:pointer}
-.nav button:hover{background:#f4f4ef}.nav button.active{border-color:#111;background:#f4add2;box-shadow:3px 3px 0 #111}
-.health{border-top:2px solid #111;padding-top:14px;font-size:12px;font-weight:800}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#62cf83;border:2px solid #111;margin-right:7px}
-.main{overflow:auto;padding:28px}.hero{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px}.eyebrow{font-size:10px;letter-spacing:2px;font-weight:900;color:#666;margin:0 0 7px}
-h1{font-size:52px;letter-spacing:-3px;line-height:1;margin:0 0 8px}.heroSub{font-weight:700;color:#555}.primary{border:3px solid #111;border-radius:12px;background:#f4add2;padding:12px 16px;font-weight:900;box-shadow:4px 4px 0 #111;cursor:pointer}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}.card,.panel{background:#fff;border:3px solid #111;border-radius:14px;box-shadow:3px 3px 0 #111}
-.card{padding:16px;position:relative;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;border-right:2px solid #111}.pink:before{background:#f4add2}.blue:before{background:#9ed8f6}.yellow:before{background:#f4ef73}.green:before{background:#79d792}
-.card span{font-weight:800;color:#555}.card b{display:block;font-size:34px;margin:15px 0 5px}.card small{font-weight:700;color:#666}
-.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}.panel{padding:17px}.panelHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.panelHead h2{margin:0;font-size:21px}
-.project{display:flex;align-items:center;gap:12px;border:2px solid #111;border-radius:11px;padding:12px;margin-bottom:9px}.mark{width:12px;height:38px;border:2px solid #111;border-radius:5px}.p1{background:#f4add2}.p2{background:#9ed8f6}.p3{background:#f4ef73}.p4{background:#79d792}
-.pinfo{width:190px}.pinfo b,.pinfo span{display:block}.pinfo span{font-size:12px;color:#666;margin-top:3px}.bar{height:10px;border:2px solid #111;border-radius:10px;flex:1;overflow:hidden}.bar i{display:block;height:100%;background:#111}.percent{font-size:12px;font-weight:800}
-.agent{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:2px solid #111}.agent:last-child{border-bottom:0}.agentIcon{width:36px;height:36px;border:2px solid #111;border-radius:9px;background:#9ed8f6;display:grid;place-items:center;font-weight:900}.agentInfo{flex:1}.agentInfo b,.agentInfo span{display:block}.agentInfo span{font-size:12px;color:#666;margin-top:3px}.state{font-size:10px;font-weight:900;border:2px solid #111;border-radius:20px;padding:4px 7px;background:#f4ef73}
-.graph{height:260px;position:relative;background:#fafaf7;border:2px solid #111;border-radius:11px}.node{position:absolute;border:3px solid #111;border-radius:10px;padding:9px 12px;font-weight:900;background:#fff;box-shadow:3px 3px 0 #111}.core{left:43%;top:42%;background:#f4add2}.n1{left:8%;top:13%;background:#9ed8f6}.n2{right:9%;top:13%;background:#f4ef73}.n3{left:8%;bottom:13%}.n4{right:8%;bottom:13%}
-.activity{display:flex;align-items:center;gap:9px;padding:12px 0;border-bottom:2px solid #111}.activity:last-child{border-bottom:0}.activity span{flex:1;font-weight:700}.activity small{color:#777}
-.command{position:fixed;right:28px;bottom:24px;border:3px solid #111;background:#111;color:#fff;border-radius:14px;padding:13px 17px;font-weight:900;box-shadow:5px 5px 0 #f4add2;cursor:pointer}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);padding-top:110px}.palette{width:650px;margin:auto;background:#fff;border:3px solid #111;border-radius:16px;box-shadow:8px 8px 0 #111;padding:14px}.cmdInput{border:2px solid #111;border-radius:10px;padding:12px}.cmdInput input{border:0;outline:0;width:95%;font-size:18px}.cmd{padding:13px 6px;border-top:2px solid #111;font-weight:800}.cmd:hover{background:#f4ef73}
-@media(max-width:1000px){.metrics{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #0b0b0b;
+  color: #f7f7f7;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, #161616 0%, #0b0b0b 52%);
+}
+
+.sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 216px;
+  padding: 12px 10px;
+  border-right: 1px solid #2c2c2c;
+  background: #0a0a0a;
+}
+
+.brand-lockup {
+  margin-bottom: 12px;
+}
+
+.brand-lockup__logo {
+  display: block;
+  width: 118px;
+  height: auto;
+  max-width: 100%;
+  margin-bottom: 10px;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.brand-lockup__text strong,
+.brand-lockup__text span {
+  display: block;
+}
+
+.brand-lockup__text strong {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brand-lockup__text span {
+  margin-top: 4px;
+  color: #a9a9a9;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-nav {
+  margin-bottom: 14px;
+}
+
+.workspace-nav__item {
+  display: block;
+  width: 100%;
+  margin-bottom: 5px;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a9a9a9;
+  text-align: left;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-nav__item:hover,
+.workspace-nav__item--active {
+  border-color: #444444;
+  background: #171717;
+  color: #ffffff;
+}
+
+.workspace-sidebar__foot {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 12px;
+}
+
+.sidebar-block {
+  margin-bottom: 8px;
+  padding: 9px;
+  border: 1px solid #2c2c2c;
+  background: #111111;
+}
+
+.sidebar-block span,
+.sidebar-block strong {
+  display: block;
+}
+
+.sidebar-block span {
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-block strong {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.main {
+  position: absolute;
+  left: 216px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px 12px;
+}
+
+.header {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.header-copy {
+  float: left;
+}
+
+.header-copy p {
+  margin: 0 0 4px;
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.header-copy h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.header-actions {
+  float: right;
+  padding-top: 8px;
+}
+
+.action-button {
+  border: 1px solid #444444;
+  background: #171717;
+  color: #ffffff;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.action-button,
+.action-button:hover,
+.action-button--primary {
+  background: #ffffff;
+  color: #0b0b0b;
+}
+
+.action-button--ghost {
+  background: transparent;
+  color: #ffffff;
+  border-color: #444444;
+}
+
+.loading-bar {
+  height: 3px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.88), rgba(255,255,255,0.15));
+}
+
+.content {
+  position: absolute;
+  left: 12px;
+  top: 76px;
+  right: 12px;
+  bottom: 12px;
+  overflow: auto;
+}
+
+.page {
+  display: none;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.page.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.page.entering {
+  display: block;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.panel {
+  margin-bottom: 8px;
+  border: 1px solid #2c2c2c;
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0)), #111111;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.26);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.panel:hover {
+  border-color: #3d3d3d;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.32);
+}
+
+.panel__head {
+  padding: 12px;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.panel__head span {
+  display: block;
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel__head h2,
+.panel__head h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.panel__body {
+  padding: 12px;
+}
+
+.hero-panel .panel__body {
+  padding: 18px 18px 16px;
+}
+
+.hero-kicker {
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  margin: 10px 0 8px;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.hero-copy {
+  width: 62%;
+  color: #d6d6d6;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.workspace-commandbar {
+  margin-top: 14px;
+}
+
+.workspace-commandbar button {
+  margin-right: 6px;
+  margin-bottom: 6px;
+}
+
+.hero-meta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #2c2c2c;
+}
+
+.hero-meta__row {
+  margin-bottom: 8px;
+}
+
+.hero-meta__row span,
+.hero-meta__row strong {
+  display: block;
+}
+
+.hero-meta__row span {
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-meta__row strong {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stats-row,
+.two-col,
+.three-col {
+  margin-left: -4px;
+  margin-right: -4px;
+}
+
+.stats-row:after,
+.two-col:after,
+.three-col:after,
+.header:after,
+.row:after,
+.list-row:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.stat-card {
+  float: left;
+  width: 25%;
+  padding: 0 4px;
+}
+
+.stat-card__inner {
+  min-height: 122px;
+  padding: 12px;
+  border: 1px solid #2c2c2c;
+  background: #171717;
+}
+
+.stat-card__label {
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat-card__value {
+  margin-top: 20px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.stat-card__meta {
+  margin-top: 8px;
+  color: #c7c7c7;
+  font-size: 11px;
+}
+
+.two-col .col {
+  float: left;
+  width: 50%;
+  padding: 0 4px;
+}
+
+.three-col .col {
+  float: left;
+  width: 33.3333%;
+  padding: 0 4px;
+}
+
+.list-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.list-row:last-child {
+  border-bottom: 0;
+}
+
+.list-primary {
+  float: left;
+  width: 64%;
+}
+
+.list-primary strong,
+.list-primary span {
+  display: block;
+}
+
+.list-primary strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.list-primary span {
+  margin-top: 4px;
+  color: #a9a9a9;
+  font-size: 11px;
+}
+
+.list-secondary {
+  float: right;
+  width: 32%;
+  text-align: right;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #444444;
+  background: #ffffff;
+  color: #0b0b0b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-chip--muted {
+  background: #171717;
+  color: #d8d8d8;
+}
+
+.progress {
+  height: 10px;
+  margin-top: 8px;
+  border: 1px solid #444444;
+  background: #0f0f0f;
+}
+
+.progress i {
+  display: block;
+  height: 8px;
+  background: linear-gradient(90deg, #6b6b6b, #ffffff);
+}
+
+.metric-note {
+  margin-top: 6px;
+  color: #a9a9a9;
+  font-size: 10px;
+}
+
+.activity-stack,
+.command-stack {
+  display: block;
+}
+
+.activity-row {
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid #2c2c2c;
+  background: #171717;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.activity-row:hover,
+.workspace-nav__item:hover,
+.action-button:hover,
+.cmd-item:hover,
+.graph-node:hover {
+  transform: translateY(-1px);
+}
+
+.activity-row__top {
+  margin-bottom: 6px;
+}
+
+.activity-row__top strong {
+  font-size: 14px;
+}
+
+.activity-row p {
+  margin: 0;
+  color: #cfcfcf;
+  line-height: 1.5;
+}
+
+.activity-row small {
+  display: block;
+  margin-top: 8px;
+  color: #8e8e8e;
+  font-size: 10px;
+}
+
+.graph-stage {
+  position: relative;
+  height: 320px;
+  border: 1px solid #2c2c2c;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px) 0 0 / 44px 44px,
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 34%),
+    #111111;
+  overflow: hidden;
+}
+
+.graph-stage svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.graph-stage path {
+  stroke: rgba(255,255,255,0.28);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 6;
+  fill: none;
+  animation: graphPulse 5.4s linear infinite;
+}
+
+.graph-stage text {
+  fill: #a9a9a9;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.graph-node {
+  position: absolute;
+  min-width: 92px;
+  padding: 10px 12px;
+  border: 1px solid #444444;
+  background: #171717;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.24);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.graph-node strong,
+.graph-node span {
+  display: block;
+}
+
+.graph-node strong {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.graph-node span {
+  margin-top: 4px;
+  color: #a9a9a9;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.graph-node--core {
+  left: 44%;
+  top: 44%;
+  border-color: #7a7a7a;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)), #171717;
+}
+.graph-node--one { left: 13%; top: 12%; }
+.graph-node--two { right: 10%; top: 14%; }
+.graph-node--three { left: 11%; bottom: 13%; }
+.graph-node--four { right: 11%; bottom: 12%; }
+.graph-node--five { left: 56%; top: 8%; }
+.graph-node--six { left: 59%; bottom: 10%; }
+
+.graph-node:hover {
+  border-color: #666666;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+}
+
+.graph-legend {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  color: #a9a9a9;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes graphPulse {
+  0%, 100% { opacity: 0.34; }
+  50% { opacity: 0.82; }
+}
+
+.bridge-note,
+.settings-note {
+  color: #cfcfcf;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.settings-grid {
+  margin-left: -4px;
+  margin-right: -4px;
+}
+
+.settings-grid:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.settings-grid .tile {
+  float: left;
+  width: 50%;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+.tile__inner {
+  padding: 12px;
+  border: 1px solid #2c2c2c;
+  background: #171717;
+}
+
+.tile__inner span,
+.tile__inner strong {
+  display: block;
+}
+
+.tile__inner span {
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tile__inner strong {
+  margin-top: 7px;
+  font-size: 18px;
+}
+
+.overlay {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.66);
+}
+
+.palette {
+  width: 620px;
+  margin: 104px auto 0;
+  border: 1px solid #444444;
+  background: #101010;
+  box-shadow: 0 18px 36px rgba(0,0,0,0.38);
+}
+
+.palette__head {
+  padding: 14px;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.palette__head span {
+  display: block;
+  color: #a9a9a9;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.palette__head input {
+  width: 100%;
+  height: 44px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid #444444;
+  background: #171717;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.palette__body {
+  padding: 10px 14px 14px;
+}
+
+.cmd-item {
+  padding: 11px 4px;
+  border-bottom: 1px solid #2c2c2c;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cmd-item:hover {
+  color: #d0d0d0;
+}
+
+.empty-state {
+  color: #a9a9a9;
+  font-size: 12px;
+}
 </style>
 <script>
-function activate(btn){
- var buttons=document.getElementById('nav').getElementsByTagName('button');
- for(var i=0;i<buttons.length;i++)buttons[i].className='';
- btn.className='active';
+function byId(id) {
+  return document.getElementById(id);
 }
-function openCommand(){document.getElementById('overlay').style.display='block';document.getElementById('cmdBox').focus()}
-function closeCommand(){document.getElementById('overlay').style.display='none'}
-document.onkeydown=function(e){e=e||window.event;if((e.ctrlKey||e.metaKey)&&e.keyCode==75){openCommand();return false}if(e.keyCode==27)closeCommand()}
+
+function setPage(pageId) {
+  var pages = document.getElementsByName('page');
+  var nav = document.getElementsByName('nav');
+  var i;
+
+  for (i = 0; i < pages.length; i++) {
+    if (pages[i].getAttribute('data-page') === pageId) {
+      pages[i].className = 'page entering';
+    } else {
+      pages[i].className = 'page';
+    }
+  }
+
+  for (i = 0; i < nav.length; i++) {
+    nav[i].className = nav[i].getAttribute('data-nav') === pageId ? 'workspace-nav__item workspace-nav__item--active' : 'workspace-nav__item';
+  }
+
+  byId('pageLabel').innerText = navLabel(pageId);
+  byId('pageTitle').innerText = pageTitle(pageId);
+
+  window.setTimeout(function() {
+    for (i = 0; i < pages.length; i++) {
+      if (pages[i].getAttribute('data-page') === pageId) {
+        pages[i].className = 'page active';
+      }
+    }
+  }, 16);
+}
+
+function navLabel(pageId) {
+  var labels = {
+    overview: 'Overview',
+    board: 'Board',
+    ecosystem: 'Ecosystem',
+    roadmap: 'Roadmap',
+    activity: 'Activity',
+    bridge: 'Bridge',
+    settings: 'Settings'
+  };
+  return labels[pageId] || 'Overview';
+}
+
+function pageTitle(pageId) {
+  var labels = {
+    overview: 'Classic Solo Workspace',
+    board: 'Board of Directors',
+    ecosystem: 'EXOTIC Ecosystem Map',
+    roadmap: 'Roadmap Matrix',
+    activity: 'Execution Activity',
+    bridge: 'Operator Bridge',
+    settings: 'Observer Settings'
+  };
+  return labels[pageId] || 'Classic Solo Workspace';
+}
+
+function openPalette() {
+  byId('overlay').style.display = 'block';
+  byId('commandInput').focus();
+}
+
+function closePalette() {
+  byId('overlay').style.display = 'none';
+}
+
+function quickOpen(pageId) {
+  setPage(pageId);
+  closePalette();
+}
+
+function initShell() {
+  setPage('overview');
+  document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    if ((evt.ctrlKey && evt.keyCode == 75) || (evt.altKey && evt.keyCode == 80)) {
+      openPalette();
+      return false;
+    }
+    if (evt.keyCode == 27) {
+      closePalette();
+    }
+  };
+}
 </script>
 </head>
-<body>
-<div class="app">
-<header class="top">
-  <div class="brand"><img class="logo" src="er-logo.png"><div class="brandText"><b>EXOTIC</b><span>PORTAL</span></div></div>
-  <div class="search">⌕<input placeholder="Search everything or run a command" onclick="openCommand()"></div>
-  <div class="user"><div class="bell">●</div><div class="avatar">M</div></div>
-</header>
+<body onload="initShell()">
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-lockup">
+      <img class="brand-lockup__logo" src="er-logo-reference.svg" alt="ER logo">
+      <div class="brand-lockup__text">
+        <strong>EXOTIC</strong>
+        <span>Solo creator workspace</span>
+      </div>
+    </div>
 
-<aside class="side">
-  <div class="nav" id="nav">
-    <button class="active" onclick="activate(this)">▦ &nbsp; Home</button>
-    <button onclick="activate(this)">▣ &nbsp; Projects</button>
-    <button onclick="activate(this)">◆ &nbsp; AI Agents</button>
-    <button onclick="activate(this)">↻ &nbsp; Workflows</button>
-    <button onclick="activate(this)">◉ &nbsp; Activity</button>
-    <button onclick="activate(this)">▥ &nbsp; Analytics</button>
-    <button onclick="activate(this)">⚗ &nbsp; Research</button>
-    <button onclick="activate(this)">✓ &nbsp; Trust</button>
-    <button onclick="activate(this)">⚙ &nbsp; Settings</button>
+    <nav class="workspace-nav">
+      <button name="nav" class="workspace-nav__item workspace-nav__item--active" data-nav="overview" onclick="setPage('overview')">Overview</button>
+      <button name="nav" class="workspace-nav__item" data-nav="board" onclick="setPage('board')">Board</button>
+      <button name="nav" class="workspace-nav__item" data-nav="ecosystem" onclick="setPage('ecosystem')">Ecosystem</button>
+      <button name="nav" class="workspace-nav__item" data-nav="roadmap" onclick="setPage('roadmap')">Roadmap</button>
+      <button name="nav" class="workspace-nav__item" data-nav="activity" onclick="setPage('activity')">Activity</button>
+      <button name="nav" class="workspace-nav__item" data-nav="bridge" onclick="setPage('bridge')">Bridge</button>
+      <button name="nav" class="workspace-nav__item" data-nav="settings" onclick="setPage('settings')">Settings</button>
+    </nav>
+
+    <div class="workspace-sidebar__foot">
+      <div class="sidebar-block"><span>Mode</span><strong>desktop</strong></div>
+      <div class="sidebar-block"><span>Auto Mode</span><strong>running</strong></div>
+      <div class="sidebar-block"><span>Branch</span><strong>codex/observability</strong></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="header">
+      <div class="header-copy">
+        <p id="pageLabel">Overview</p>
+        <h1 id="pageTitle">Classic Solo Workspace</h1>
+      </div>
+      <div class="header-actions">
+        <button class="action-button" type="button" onclick="openPalette()">Command</button>
+      </div>
+    </div>
+
+    <div class="loading-bar"></div>
+
+    <div class="content">
+      <section name="page" class="page active" data-page="overview">
+        <div class="panel hero-panel">
+          <div class="panel__body">
+            <div class="hero-kicker">Sunday, July 26, 2026</div>
+            <div class="hero-title">EXOTIC desktop shell,<br>live control surface.</div>
+            <div class="hero-copy">Observe. Route. Review. Launch.</div>
+            <div class="workspace-commandbar">
+              <button class="action-button action-button--ghost" type="button" onclick="setPage('roadmap')">Roadmap</button>
+              <button class="action-button action-button--ghost" type="button" onclick="setPage('ecosystem')">Ecosystem</button>
+              <button class="action-button action-button--ghost" type="button" onclick="setPage('bridge')">Bridge</button>
+              <button class="action-button action-button--primary" type="button" onclick="setPage('activity')">View Activity</button>
+            </div>
+            <div class="hero-meta">
+              <div class="hero-meta__row"><span>Focus</span><strong>Unified control</strong></div>
+              <div class="hero-meta__row"><span>Workspace</span><strong>C:\Projects\Exotic</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-card__inner"><div class="stat-card__label">Progress</div><div class="stat-card__value">84%</div><div class="stat-card__meta">Stack</div></div></div>
+          <div class="stat-card"><div class="stat-card__inner"><div class="stat-card__label">Workers</div><div class="stat-card__value">9</div><div class="stat-card__meta">4 live</div></div></div>
+          <div class="stat-card"><div class="stat-card__inner"><div class="stat-card__label">Files</div><div class="stat-card__value">12</div><div class="stat-card__meta">Changed</div></div></div>
+          <div class="stat-card"><div class="stat-card__inner"><div class="stat-card__label">Build</div><div class="stat-card__value">98%</div><div class="stat-card__meta">Healthy</div></div></div>
+        </div>
+
+        <div class="two-col">
+          <div class="col">
+            <div class="panel">
+              <div class="panel__head"><span>Queue</span><h2>Current roadmap</h2></div>
+              <div class="panel__body">
+                <div class="list-row">
+                  <div class="list-primary"><strong>Observability</strong><span>QA / Handoff</span><div class="progress"><i style="width:84%;"></i></div><div class="metric-note">84%</div></div>
+                  <div class="list-secondary"><span class="status-chip">running</span></div>
+                </div>
+                <div class="list-row">
+                  <div class="list-primary"><strong>Operations Console</strong><span>Control plane</span><div class="progress"><i style="width:28%;"></i></div><div class="metric-note">28%</div></div>
+                  <div class="list-secondary"><span class="status-chip status-chip--muted">pending</span></div>
+                </div>
+                <div class="list-row">
+                  <div class="list-primary"><strong>Desktop Alignment</strong><span>Shell parity</span><div class="progress"><i style="width:91%;"></i></div><div class="metric-note">91%</div></div>
+                  <div class="list-secondary"><span class="status-chip">running</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="panel">
+              <div class="panel__head"><span>System</span><h2>Recent activity</h2></div>
+              <div class="panel__body activity-stack">
+                <div class="activity-row"><div class="activity-row__top"><strong>Desktop shell aligned</strong></div><small>Now</small></div>
+                <div class="activity-row"><div class="activity-row__top"><strong>ER asset promoted</strong></div><small>2m ago</small></div>
+                <div class="activity-row"><div class="activity-row__top"><strong>Shortcut flow repaired</strong></div><small>Earlier today</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="board">
+        <div class="panel">
+          <div class="panel__head"><span>Board</span><h2>Board of Directors</h2></div>
+          <div class="panel__body">
+            <div class="list-row"><div class="list-primary"><strong>Architect</strong><span>Runtime</span></div><div class="list-secondary"><span class="status-chip">active</span></div></div>
+            <div class="list-row"><div class="list-primary"><strong>Builder</strong><span>Shell</span></div><div class="list-secondary"><span class="status-chip">active</span></div></div>
+            <div class="list-row"><div class="list-primary"><strong>Observer</strong><span>Telemetry</span></div><div class="list-secondary"><span class="status-chip status-chip--muted">watching</span></div></div>
+            <div class="list-row"><div class="list-primary"><strong>Trust</strong><span>Guardrails</span></div><div class="list-secondary"><span class="status-chip status-chip--muted">ready</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="ecosystem">
+        <div class="panel">
+          <div class="panel__head"><span>Ecosystem</span><h2>EXOTIC Ecosystem Map</h2></div>
+          <div class="panel__body">
+            <div class="graph-stage">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M 44 44 L 16 16"></path>
+                <path d="M 44 44 L 84 18"></path>
+                <path d="M 44 44 L 16 82"></path>
+                <path d="M 44 44 L 84 82"></path>
+                <path d="M 44 44 L 58 12"></path>
+                <path d="M 44 44 L 60 84"></path>
+                <text x="28" y="24">route</text>
+                <text x="64" y="26">assign</text>
+                <text x="28" y="68">learn</text>
+                <text x="67" y="69">run</text>
+                <text x="50" y="24">sense</text>
+                <text x="51" y="73">gate</text>
+              </svg>
+              <div class="graph-node graph-node--core"><strong>EXOTIC</strong><span>Root</span></div>
+              <div class="graph-node graph-node--one"><strong>Projects</strong><span>04</span></div>
+              <div class="graph-node graph-node--two"><strong>Workers</strong><span>09</span></div>
+              <div class="graph-node graph-node--three"><strong>Memory</strong><span>Live</span></div>
+              <div class="graph-node graph-node--four"><strong>Automation</strong><span>12</span></div>
+              <div class="graph-node graph-node--five"><strong>Signals</strong><span>87%</span></div>
+              <div class="graph-node graph-node--six"><strong>Trust</strong><span>Clear</span></div>
+              <div class="graph-legend">route / learn / gate / run</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="roadmap">
+        <div class="panel">
+          <div class="panel__head"><span>Roadmap</span><h2>Roadmap Matrix</h2></div>
+          <div class="panel__body">
+            <div class="list-row"><div class="list-primary"><strong>001A-001I</strong><span>Complete</span></div><div class="list-secondary"><span class="status-chip">completed</span></div></div>
+            <div class="list-row"><div class="list-primary"><strong>001J</strong><span>Observability</span></div><div class="list-secondary"><span class="status-chip">running</span></div></div>
+            <div class="list-row"><div class="list-primary"><strong>001K</strong><span>Operations Console</span></div><div class="list-secondary"><span class="status-chip status-chip--muted">queued</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="activity">
+        <div class="panel">
+          <div class="panel__head"><span>Activity</span><h2>Execution Activity</h2></div>
+          <div class="panel__body activity-stack">
+            <div class="activity-row"><div class="activity-row__top"><strong>Shell rebuilt</strong></div><small>Current session</small></div>
+            <div class="activity-row"><div class="activity-row__top"><strong>Legacy styling removed</strong></div><small>Current session</small></div>
+            <div class="activity-row"><div class="activity-row__top"><strong>Build environment repaired</strong></div><small>Sunday, July 26, 2026</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="bridge">
+        <div class="panel">
+          <div class="panel__head"><span>Bridge</span><h2>Operator Bridge</h2></div>
+          <div class="panel__body">
+            <div class="bridge-note">Local bridge surface. Runtime parity next.</div>
+          </div>
+        </div>
+      </section>
+
+      <section name="page" class="page" data-page="settings">
+        <div class="panel">
+          <div class="panel__head"><span>Settings</span><h2>Observer Settings</h2></div>
+          <div class="panel__body">
+            <div class="settings-grid">
+              <div class="tile"><div class="tile__inner"><span>Renderer</span><strong>MSHTA / IE Edge</strong></div></div>
+              <div class="tile"><div class="tile__inner"><span>Brand mode</span><strong>Operations Console</strong></div></div>
+              <div class="tile"><div class="tile__inner"><span>Logo asset</span><strong>ER reference</strong></div></div>
+              <div class="tile"><div class="tile__inner"><span>Launcher mode</span><strong>Desktop shell</strong></div></div>
+            </div>
+            <div class="settings-note">Live-only shell. Console parity target.</div>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
-  <div class="health"><span class="dot"></span>Platform healthy<br><br><small>EXOTIC PLATFORM 0.4</small></div>
-</aside>
 
-<main class="main">
-<section class="hero">
-  <div><p class="eyebrow">LIVE OPERATING WORKSPACE</p><h1>Good morning, Mingo.</h1><div class="heroSub">Observe. Map. Predict. Align. Act. Measure. Learn.</div></div>
-  <button class="primary">＋ New Project</button>
-</section>
-
-<section class="metrics">
-  <div class="card pink"><span>Active Projects</span><b>14</b><small>+3 this month</small></div>
-  <div class="card blue"><span>AI Agents</span><b>9</b><small>4 active now</small></div>
-  <div class="card yellow"><span>Momentum</span><b>87%</b><small>+12% this week</small></div>
-  <div class="card green"><span>Build Health</span><b>98%</b><small>All systems stable</small></div>
-</section>
-
-<section class="grid">
-  <div class="panel">
-    <div class="panelHead"><div><p class="eyebrow">WORKSPACE</p><h2>Projects</h2></div><b>VIEW ALL →</b></div>
-    <div class="project"><div class="mark p1"></div><div class="pinfo"><b>Exotic Portal</b><span>Building</span></div><div class="bar"><i style="width:78%"></i></div><div class="percent">78%</div></div>
-    <div class="project"><div class="mark p2"></div><div class="pinfo"><b>Continuity Engine</b><span>Architecture</span></div><div class="bar"><i style="width:52%"></i></div><div class="percent">52%</div></div>
-    <div class="project"><div class="mark p3"></div><div class="pinfo"><b>MINGO Advertising OS</b><span>Prototype</span></div><div class="bar"><i style="width:41%"></i></div><div class="percent">41%</div></div>
-    <div class="project"><div class="mark p4"></div><div class="pinfo"><b>Universal Memory Graph</b><span>Stable</span></div><div class="bar"><i style="width:88%"></i></div><div class="percent">88%</div></div>
+  <div class="overlay" id="overlay" onclick="closePalette()">
+    <div class="palette" onclick="window.event.cancelBubble=true;">
+      <div class="palette__head">
+        <span>Command Palette</span>
+        <input id="commandInput" type="text" value="Jump to overview, board, ecosystem, roadmap, activity, bridge, or settings">
+      </div>
+      <div class="palette__body">
+        <div class="cmd-item" onclick="quickOpen('overview')">Open overview</div>
+        <div class="cmd-item" onclick="quickOpen('board')">Open board</div>
+        <div class="cmd-item" onclick="quickOpen('ecosystem')">Open ecosystem</div>
+        <div class="cmd-item" onclick="quickOpen('roadmap')">Open roadmap</div>
+        <div class="cmd-item" onclick="quickOpen('activity')">Open activity</div>
+        <div class="cmd-item" onclick="quickOpen('bridge')">Open bridge</div>
+        <div class="cmd-item" onclick="quickOpen('settings')">Open settings</div>
+      </div>
+    </div>
   </div>
-
-  <div class="panel">
-    <div class="panelHead"><div><p class="eyebrow">INTELLIGENCE</p><h2>AI Swarm</h2></div><b>◉</b></div>
-    <div class="agent"><div class="agentIcon">A</div><div class="agentInfo"><b>Architect</b><span>Structuring Portal runtime</span></div><div class="state">ACTIVE</div></div>
-    <div class="agent"><div class="agentIcon">B</div><div class="agentInfo"><b>Builder</b><span>Compiling interface shell</span></div><div class="state">ACTIVE</div></div>
-    <div class="agent"><div class="agentIcon">O</div><div class="agentInfo"><b>Observer</b><span>Tracking workspace state</span></div><div class="state">WATCHING</div></div>
-    <div class="agent"><div class="agentIcon">T</div><div class="agentInfo"><b>Trust</b><span>Validating security gates</span></div><div class="state">READY</div></div>
-  </div>
-
-  <div class="panel">
-    <div class="panelHead"><div><p class="eyebrow">RELATIONSHIPS</p><h2>Live Graph</h2></div><b>◎</b></div>
-    <div class="graph"><div class="node core">EXOTIC</div><div class="node n1">Projects</div><div class="node n2">AI</div><div class="node n3">Memory</div><div class="node n4">Automation</div></div>
-  </div>
-
-  <div class="panel">
-    <div class="panelHead"><div><p class="eyebrow">SYSTEM</p><h2>Live Activity</h2></div><b>⚡</b></div>
-    <div class="activity"><b>✓</b><span>Builder compiled Portal shell</span><small>Now</small></div>
-    <div class="activity"><b>✓</b><span>Trust verified execution gate</span><small>2m</small></div>
-    <div class="activity"><b>✓</b><span>Observer synchronized workspace</span><small>4m</small></div>
-    <div class="activity"><b>✓</b><span>Architect updated project graph</span><small>9m</small></div>
-  </div>
-</section>
-</main>
-<button class="command" onclick="openCommand()">⌘ &nbsp; Portal</button>
 </div>
-
-<div id="overlay" class="overlay" onclick="closeCommand()">
- <div class="palette" onclick="window.event.cancelBubble=true">
-   <div class="cmdInput">⌘ &nbsp;<input id="cmdBox" placeholder="Build, search, open, deploy..."></div>
-   <p class="eyebrow" style="margin-top:16px">SUGGESTED COMMANDS</p>
-   <div class="cmd">Build a new app →</div><div class="cmd">Open Exotic Portal project →</div><div class="cmd">Run platform health check →</div><div class="cmd">Create an automation →</div>
- </div>
-</div>
-</body></html>
+</body>
+</html>

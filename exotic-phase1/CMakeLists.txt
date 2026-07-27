@@ -69,4 +69,7 @@ endif()
 if(NOT TARGET exotic_continuous_operations)
   include(cmake/EXOTIC_CONTINUOUS_OPERATIONS.cmake)
 endif()
+if(NOT TARGET exotic_codex_operator)
+  include(cmake/EXOTIC_CODEX_OPERATOR.cmake)
+endif()
 # END EXOTIC CONTINUOUS OPERATIONS V1

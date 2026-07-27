@@ -1,0 +1,10 @@
+order,file,sha256,archive_bytes,files,uncompressed_bytes
+1,EXOTIC-Event-Scheduler-Durable-Runtime-v0.3.zip,b04e25d142076ba63bd1b4ea75d80893c138d7e7c8e25e4eab9fcf76941ae5ae,26559,25,57456
+2,EXOTIC-Approval-Governance-Authority-Runtime-v0.4.zip,4b53bd84ff9c2fe7a63e24ab55dc7ce93b8072a32b729012fc8325ee700d287b,20659,23,34381
+3,EXOTIC-Resource-Governor-Budget-Runtime-v0.5.zip,1c2dda923cf5c44fa9b003d7eff24bc3f9e9722f0da11a8a6b2b9b4ce421311c,58179,41,173087
+4,EXOTIC-Agent-Capability-Registry-Work-Allocation-Runtime-v0.6.zip,23f7eaf805fd8db96e37101c58b78f36f17773b62885b1e2f32ab317b01b8426,62266,46,171858
+5,EXOTIC-Continuous-Operations-Runtime-v1.0.zip,f353ad8481869a1f73f6f07e28f9419a9004092632e9e3ce476d5fcb04dcb551,106565,83,260738
+6,EXOTIC-Live-Integrator-v1.0.zip,8f7639b22712cc3f6192e97c34d0a70c5cc6c2dd5200c36f40d637dd92993219,339136,50,422927
+7,EXOTIC-v1.0-Repair-and-Health-Check.zip,41a15851df14285f533483a3b9b80b21c405ea160e0f2bcdb50db8c38f3b9491,10370,7,24388
+8,EXOTIC-Operations-Console-v1.0.zip,31ce0ad69e3b3d019bc314ff772294c570c59932cb5979a6f3bc8b2b2ae272a6,90204,28,315481
+9,EXOTIC-Operations-Console-Live-Integration-v1.1.zip,4afc934ddeddfc2ded2f6e400950a831089e4ecd91f2d7a6e2620981114e0363,134669,46,431826

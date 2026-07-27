@@ -1,0 +1,15 @@
+EXOTIC PLATFORM SERVICES 0.4
+workspace=C:\Projects\Exotic
+projects=21
+devices=1
+proposals=1
+workflows=1
+notifications=1
+
+SERVICES
+  ai  healthy  approval required  ops=1
+  automation  healthy  ready  ops=1
+  build  healthy  queue ready  ops=0
+  devices  healthy  ready  ops=1
+  notifications  healthy  ready  ops=1
+  search  healthy  index-on-demand  ops=0

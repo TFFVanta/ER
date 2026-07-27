@@ -1,0 +1,49 @@
+{
+  "name": "exotic-operations-console",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EXOTIC Operations Console for Continuous Operations Runtime v1.0",
+  "main": "desktop/main.cjs",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "browser": "node scripts/serve.mjs",
+    "desktop": "electron .",
+    "desktop:dev": "electron . --dev",
+    "package:win": "electron-builder --win nsis portable",
+    "verify": "npm run build && node scripts/verify-build.mjs && node scripts/verify-runtime.mjs",
+    "verify:runtime": "node scripts/verify-runtime.mjs",
+    "demo:live": "node scripts/mock-runtime.mjs",
+    "codex:live": "node scripts/codex-bridge-runtime.mjs"
+  },
+  "dependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "center.mingo.exotic.operations",
+    "productName": "EXOTIC Operations Console",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "public/er-logo.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EXOTIC Operations Console"
+    }
+  }
+}

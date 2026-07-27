@@ -1,8 +1,0 @@
-EXOTIC NATIVE ALPHA
-
-1. Extract this folder to C:\Projects\Exotic\EXOTIC-Native
-2. Double-click BUILD_EXOTIC.cmd once.
-3. It compiles a real native Windows application and places EXOTIC.exe on your desktop.
-4. From then on, double-click EXOTIC.exe only.
-
-This build uses C++20 and native Win32/GDI. No Node, browser, HTA, or web wrapper.

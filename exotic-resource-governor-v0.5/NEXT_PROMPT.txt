@@ -1,0 +1,18 @@
+Build EXOTIC Agent Capability Registry and Work Allocation Runtime v0.6.
+
+Implement durable agent identities, specialist profiles, capability taxonomy,
+proficiency and reliability scoring, tool permissions, model/runtime metadata,
+availability, health, workload, cost profiles, trust level, domain scope,
+capability evidence, agent registration and revocation, dynamic task routing,
+constraint-based agent selection, team formation, supervisor assignment,
+parallel and sequential work plans, load balancing, failure replacement,
+heartbeat and liveness, performance history, learning updates, scheduler worker
+binding, governance and resource compatibility checks, CLI commands, C++20
+tests, SQLite migrations, CMake integration, and a complete EXOTIC save bundle.
+
+Place agent selection after proposal/governance planning and before scheduler
+execution. The selected agent or team must be authorized for the action, fit
+within the approved resource reservation, and remain replaceable without
+losing operation continuity. Do not stop at architecture; provide a
+compile-oriented source bundle with exact files, migration code, integration
+adapters, tests, and restart recovery.

@@ -1,0 +1,115 @@
+#include "exotic/portal/portal_server.hpp"
+#include "exotic/runtime/runtime.hpp"
+#include "exotic/services/services.hpp"
+#include <cstdint>
+#include <filesystem>
+#include <iomanip>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+
+using namespace exotic;
+
+static int demo() {
+    Runtime runtime;
+    auto operator_entity = runtime.graph().create_entity("identity", "Mingo Operator");
+    auto project = runtime.graph().create_entity("project", "Exotic");
+    auto engine = runtime.graph().create_entity("system", "Universal State Graph");
+    runtime.graph().connect(project->id(), engine->id(), "contains", 1.0);
+    runtime.graph().connect(operator_entity->id(), project->id(), "creates", 1.0);
+    runtime.security().grant(operator_entity->id(), Permission::Admin);
+
+    runtime.events().subscribe("*", [](const Event& event) {
+        std::cout << "event  " << event.type << "  " << event.id.str() << '\n';
+    });
+
+    const auto result = runtime.cycle(operator_entity->id(), project->id(), "momentum", 7.5,
+                                      Action{project->id(), "advance_phase", Value("phase-1"), 0.9});
+    std::cout << std::fixed << std::setprecision(3)
+              << "prediction=" << result.prediction.estimate << " confidence=" << result.prediction.confidence << '\n'
+              << "alignment=" << result.alignment.overall << '\n'
+              << "executed=" << std::boolalpha << result.executed << "\n\n"
+              << runtime.status() << '\n';
+    return result.executed ? 0 : 1;
+}
+
+static int portal(int argc, char** argv) {
+    std::uint16_t port = 8787;
+    if (argc > 2) {
+        const int parsed = std::stoi(argv[2]);
+        if (parsed < 1024 || parsed > 65535) throw std::invalid_argument("port must be between 1024 and 65535");
+        port = static_cast<std::uint16_t>(parsed);
+    }
+    std::filesystem::path workspace = std::filesystem::current_path().parent_path();
+    if (argc > 3) workspace = argv[3];
+    Runtime runtime;
+    PortalServer server(runtime, PortalOptions{port, true, workspace});
+    return server.run();
+}
+
+
+static int platform_demo() {
+    Runtime runtime;
+    PlatformService platform(std::filesystem::current_path().parent_path());
+    ServiceRegistry registry;
+    auto search = std::make_shared<SearchService>(platform);
+    auto builds = std::make_shared<BuildService>(platform, runtime.events());
+    auto notifications = std::make_shared<NotificationService>();
+    auto devices = std::make_shared<DeviceService>();
+    auto ai = std::make_shared<AIService>();
+    auto automation = std::make_shared<AutomationService>(runtime.events());
+    registry.add(search); registry.add(builds); registry.add(notifications);
+    registry.add(devices); registry.add(ai); registry.add(automation);
+    registry.initialize_all(); registry.start_all();
+
+    const auto device_id = devices->register_device("Portal Phone", "mobile", "local-demo-fingerprint");
+    devices->approve(device_id);
+    const auto proposal_id = ai->propose("Index workspace", "Keep project context current", "projects.read");
+    ai->decide(proposal_id, true);
+    automation->run("Phase 2 verification", {
+        {"discover projects", [&] { return !platform.projects().empty(); }},
+        {"create notification", [&] { notifications->push("success", "Platform online", "Phase 2 services are operational"); return true; }}
+    });
+
+    std::cout << "EXOTIC PLATFORM SERVICES 0.4\n"
+              << "workspace=" << platform.workspace_root().string() << '\n'
+              << "projects=" << platform.projects().size() << '\n'
+              << "devices=" << devices->devices().size() << '\n'
+              << "proposals=" << ai->proposals().size() << '\n'
+              << "workflows=" << automation->runs().size() << '\n'
+              << "notifications=" << notifications->list().size() << "\n\nSERVICES\n";
+    for (const auto& [name, health] : registry.health()) {
+        std::cout << "  " << name << "  " << (health.healthy ? "healthy" : "failed")
+                  << "  " << health.detail << "  ops=" << health.operations << '\n';
+    }
+    registry.stop_all();
+    return 0;
+}
+
+static void help() {
+    std::cout << "Exotic CLI\n\nCommands:\n"
+              << "  exotic demo          Run the complete intelligence loop\n"
+              << "  exotic status        Show runtime health\n"
+              << "  exotic portal [port] [workspace] Start Exotic Portal for phone access\n"
+              << "  exotic platform      Verify Phase 2 platform services\n"
+              << "  exotic help          Show this message\n";
+}
+
+int main(int argc, char** argv) {
+    try {
+        const std::string command = argc > 1 ? argv[1] : "help";
+        if (command == "demo") return demo();
+        if (command == "portal") return portal(argc, argv);
+        if (command == "platform") return platform_demo();
+        if (command == "status") {
+            Runtime runtime;
+            std::cout << runtime.status() << '\n';
+            return 0;
+        }
+        help();
+        return command == "help" ? 0 : 2;
+    } catch (const std::exception& error) {
+        std::cerr << "Exotic error: " << error.what() << '\n';
+        return 1;
+    }
+}

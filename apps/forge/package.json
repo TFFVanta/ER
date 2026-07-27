@@ -5,7 +5,7 @@
     "type":  "module",
     "scripts":  {
                     "dev":  "node src/index.js",
-                    "test":  "echo TODO",
+                    "test":  "node --test tests/index.test.js",
                     "start":  "node src/index.js"
                 },
     "bin":  {

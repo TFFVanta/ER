@@ -1,0 +1,15 @@
+{
+  "name": "EXOTIC Portal",
+  "short_name": "EXOTIC",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#f4add2",
+  "background_color": "#111111",
+  "icons": [
+    {
+      "src": "/er-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

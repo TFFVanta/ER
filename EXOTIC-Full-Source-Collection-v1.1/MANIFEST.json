@@ -1,0 +1,81 @@
+{
+  "bundle_id": "EXOTIC-FULL-SOURCE-COLLECTION-1.1",
+  "version": "1.1",
+  "created_utc": "2026-07-14T22:07:01.350887+00:00",
+  "canonical_backend": "EXOTIC-Live-Integrator-v1.0",
+  "canonical_frontend": "EXOTIC-Operations-Console-Live-Integration-v1.1",
+  "releases": [
+    {
+      "order": 1,
+      "file": "EXOTIC-Event-Scheduler-Durable-Runtime-v0.3.zip",
+      "sha256": "b04e25d142076ba63bd1b4ea75d80893c138d7e7c8e25e4eab9fcf76941ae5ae",
+      "archive_bytes": 26559,
+      "files": 25,
+      "uncompressed_bytes": 57456
+    },
+    {
+      "order": 2,
+      "file": "EXOTIC-Approval-Governance-Authority-Runtime-v0.4.zip",
+      "sha256": "4b53bd84ff9c2fe7a63e24ab55dc7ce93b8072a32b729012fc8325ee700d287b",
+      "archive_bytes": 20659,
+      "files": 23,
+      "uncompressed_bytes": 34381
+    },
+    {
+      "order": 3,
+      "file": "EXOTIC-Resource-Governor-Budget-Runtime-v0.5.zip",
+      "sha256": "1c2dda923cf5c44fa9b003d7eff24bc3f9e9722f0da11a8a6b2b9b4ce421311c",
+      "archive_bytes": 58179,
+      "files": 41,
+      "uncompressed_bytes": 173087
+    },
+    {
+      "order": 4,
+      "file": "EXOTIC-Agent-Capability-Registry-Work-Allocation-Runtime-v0.6.zip",
+      "sha256": "23f7eaf805fd8db96e37101c58b78f36f17773b62885b1e2f32ab317b01b8426",
+      "archive_bytes": 62266,
+      "files": 46,
+      "uncompressed_bytes": 171858
+    },
+    {
+      "order": 5,
+      "file": "EXOTIC-Continuous-Operations-Runtime-v1.0.zip",
+      "sha256": "f353ad8481869a1f73f6f07e28f9419a9004092632e9e3ce476d5fcb04dcb551",
+      "archive_bytes": 106565,
+      "files": 83,
+      "uncompressed_bytes": 260738
+    },
+    {
+      "order": 6,
+      "file": "EXOTIC-Live-Integrator-v1.0.zip",
+      "sha256": "8f7639b22712cc3f6192e97c34d0a70c5cc6c2dd5200c36f40d637dd92993219",
+      "archive_bytes": 339136,
+      "files": 50,
+      "uncompressed_bytes": 422927
+    },
+    {
+      "order": 7,
+      "file": "EXOTIC-v1.0-Repair-and-Health-Check.zip",
+      "sha256": "41a15851df14285f533483a3b9b80b21c405ea160e0f2bcdb50db8c38f3b9491",
+      "archive_bytes": 10370,
+      "files": 7,
+      "uncompressed_bytes": 24388
+    },
+    {
+      "order": 8,
+      "file": "EXOTIC-Operations-Console-v1.0.zip",
+      "sha256": "31ce0ad69e3b3d019bc314ff772294c570c59932cb5979a6f3bc8b2b2ae272a6",
+      "archive_bytes": 90204,
+      "files": 28,
+      "uncompressed_bytes": 315481
+    },
+    {
+      "order": 9,
+      "file": "EXOTIC-Operations-Console-Live-Integration-v1.1.zip",
+      "sha256": "4afc934ddeddfc2ded2f6e400950a831089e4ecd91f2d7a6e2620981114e0363",
+      "archive_bytes": 134669,
+      "files": 46,
+      "uncompressed_bytes": 431826
+    }
+  ]
+}

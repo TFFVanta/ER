@@ -1,0 +1,6 @@
+# EXOTIC Codex Operator foundation configuration
+workspace_id=codex-operator
+scheduler_workers=4
+metrics_enabled=true
+structured_logs_to_file=true
+minimum_log_level=info

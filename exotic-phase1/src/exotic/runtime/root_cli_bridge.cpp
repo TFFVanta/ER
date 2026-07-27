@@ -33,7 +33,11 @@ std::optional<std::string> read_env(const char* key) {
 }
 
 int try_run_runtime_cli(int argc, char** argv) {
-    if (argc < 2 || std::string{argv[1]} != "runtime") {
+    if (argc < 2) {
+        return runtime_cli_not_handled;
+    }
+    const std::string mode{argv[1]};
+    if (mode != "runtime" && mode != "autonomous") {
         return runtime_cli_not_handled;
     }
 
@@ -54,6 +58,10 @@ int try_run_runtime_cli(int argc, char** argv) {
         arguments.push_back(value);
     }
 
+    if (mode == "autonomous") {
+        arguments.insert(arguments.begin(), "autonomous");
+    }
+
     const auto config = load_runtime_config(workspace);
     const WorkspaceContext context{config.workspace};
     SqliteTelemetryRepository telemetry{
@@ -63,7 +71,8 @@ int try_run_runtime_cli(int argc, char** argv) {
     RuntimeCli cli{
         telemetry,
         config.workspace_id,
-        context.paths().dashboards
+        context.paths().dashboards,
+        config.workspace
     };
     return cli.run(arguments, std::cout);
 }

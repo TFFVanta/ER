@@ -28,5 +28,3 @@ export const ExoticDashboard = {
     };
   }
 };
-
-console.log(ExoticDashboard.snapshot());

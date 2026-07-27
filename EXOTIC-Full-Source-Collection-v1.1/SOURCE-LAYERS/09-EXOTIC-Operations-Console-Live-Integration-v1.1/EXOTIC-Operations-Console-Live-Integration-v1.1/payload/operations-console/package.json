@@ -1,0 +1,63 @@
+{
+  "name": "exotic-operations-console",
+  "version": "1.1.0",
+  "private": true,
+  "description": "EXOTIC Operations Console with live Continuous Operations Runtime adapter",
+  "main": "desktop/main.cjs",
+  "type": "module",
+  "scripts": {
+    "browser": "node scripts/serve.mjs",
+    "desktop": "electron .",
+    "desktop:dev": "electron . --dev",
+    "package:win": "electron-builder --win nsis portable",
+    "verify": "node scripts/verify-build.mjs",
+    "demo:live": "node scripts/mock-runtime.mjs",
+    "verify:live": "node scripts/verify-live.mjs",
+    "verify:controls": "node scripts/verify-controls.mjs"
+  },
+  "build": {
+    "appId": "center.mingo.exotic.operations",
+    "productName": "EXOTIC Operations Console",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "public/**/*",
+      "native/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "public/er-logo.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EXOTIC Operations Console"
+    },
+    "extraResources": [
+      {
+        "from": "native",
+        "to": "native",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": false
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "electron": "43.1.1",
+    "electron-builder": "26.15.3"
+  }
+}

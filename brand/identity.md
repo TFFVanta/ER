@@ -1,26 +1,54 @@
 # EXOTIC / MINGO / ER Brand Identity
 
 ## Core Rule
-Use MINGO and ER as the official visual roots of the brand. EXOTIC is the engineering platform. MINGO is the founder/signature identity. ER is the bold sticker/community identity.
+EXOTIC is the primary product identity. It must feel like an advanced AI workspace for serious operators: black and white first, sharp, structured, minimalist, and elegantly simple.
+
+MINGO remains the founder signature.
+ER remains the distinctive brand mark.
+Neither should overpower the product surface.
+
+## Brand Character
+
+- Advanced, calm, and exact
+- High trust, high clarity, high control
+- Minimal without feeling empty
+- Unique through structure, proportion, and pattern rather than decoration
+- Comparable in discipline to major technology platforms, while retaining EXOTIC's own identity
 
 ## MINGO Wordmark
-Black background, white outlined letters, spaced, simple, clean, memorable. Use it as the creator signature, splash mark, watermark, merch mark, and product seal.
+Use MINGO as the signature layer: founder seal, authorship mark, splash signature, or quiet endorsement. It should feel restrained, precise, and premium.
 
 ## ER Mark
-Bold white bubble letters with thick black cartoon depth. Use it for Exotic Remedy, stickers, community assets, Easter eggs, loading marks, mascot-style moments, and streetwear-style branding.
+Use ER as the system emblem and mnemonic mark. It should feel bold and recognizable, but it must be deployed with discipline. Favor clean black-and-white usage and reserve expressive moments for loading marks, launch surfaces, or identity anchors.
 
-## EXOTIC Platform Style
-Professional first. White workspace. Thick black outlines. Soft pink, yellow, blue, and green accents. Geometry, cards, diagrams, clean developer UI. No messy cyberpunk glow. No overcomplication.
+## EXOTIC Product Style
+EXOTIC surfaces should behave like a unified AI operating workspace:
+
+- Black and white as the dominant system
+- Sharp edges or tightly controlled radii
+- Strong spacing, alignment, and hierarchy
+- Structured grids, rails, panels, and command surfaces
+- Minimal ornament
+- Quiet motion, not playful flourish
+- Accent color only when it communicates state, focus, or system meaning
+
+The default impression should be: capable, modern, stable, and intentional.
 
 ## Brand Hierarchy
+EXOTIC = platform identity.
 MINGO = signature identity.
-ER = community/sticker identity.
-EXOTIC = software/platform identity.
-Forge = generator/CLI.
-Kernel = core engine.
-SDK = developer packages.
-Atlas = knowledge/docs.
-Studio = future visual builder.
+ER = emblematic system mark.
+Forge = creation and generation layer.
+Kernel = runtime and execution core.
+SDK = developer layer.
+Atlas = knowledge and memory layer.
+Studio = visual creation environment.
 
 ## Design Law
-Simple symbols. Thick outlines. High recognition. Professional surface. Exotic soul.
+
+1. Black and white lead.
+2. Structure creates personality.
+3. Simplicity must feel deliberate, not generic.
+4. Every surface should look operator-grade.
+5. Accent is rare and meaningful.
+6. Recognition beats decoration.

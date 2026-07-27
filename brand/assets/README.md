@@ -2,12 +2,17 @@
 
 Place the uploaded reference images here:
 
-- mingo-wordmark.png = black background / white outlined MINGO wordmark
-- er-mark.png = bold white ER sticker mark
+- `mingo-wordmark.png` = restrained signature wordmark
+- `er-mark.png` = clean ER emblem
 
 Usage:
-- MINGO wordmark = founder signature, splash screen, watermark, merch seal
-- ER mark = Exotic Remedy sticker/community identity, Easter egg, loading mark
-- EXOTIC UI = clean engineering platform using these marks as brand roots
 
-Rule: keep them black/white first. Add pastel accents only around them, not inside them.
+- MINGO wordmark = founder signature, authorship stamp, splash signature
+- ER mark = emblematic EXOTIC symbol for launch surfaces, loading moments, and product identity anchors
+- EXOTIC UI = black-and-white AI workspace with disciplined structure and minimal accent usage
+
+Rule:
+
+- Start in monochrome.
+- Preserve sharpness and recognition at small sizes.
+- Use accent only around the system, not as logo decoration.

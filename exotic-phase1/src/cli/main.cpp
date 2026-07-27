@@ -91,6 +91,7 @@ static void help() {
     std::cout << "Exotic CLI\n\nCommands:\n"
               << "  exotic demo          Run the complete intelligence loop\n"
               << "  exotic status        Show runtime health\n"
+              << "  exotic autonomous    Run the autonomous machine command surface\n"
               << "  exotic portal [port] [workspace] Start Exotic Portal for phone access\n"
               << "  exotic platform      Verify Phase 2 platform services\n"
               << "  exotic help          Show this message\n";

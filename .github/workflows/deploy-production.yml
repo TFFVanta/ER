@@ -1,0 +1,135 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy
+        required: false
+        default: production
+      environment_url:
+        description: Production health URL
+        required: false
+        default: https://mingo.center/healthz.json
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify portal
+        run: npm run portal:verify
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingo-center-dist
+          path: dist
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://mingo.center
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mingo-center-dist
+          path: dist
+
+      - name: Deploy to Hostinger
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          RELEASE_ID: ${{ github.sha }}
+          HOSTINGER_DEPLOYMENT_MODE: ${{ vars.HOSTINGER_DEPLOYMENT_MODE }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOSTINGER_DEPLOYMENT_ROOT: ${{ secrets.HOSTINGER_DEPLOYMENT_ROOT }}
+          HOSTINGER_WEB_ROOT: ${{ secrets.HOSTINGER_WEB_ROOT }}
+        run: node tooling/deploy/hostinger-deploy.mjs
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check production health
+        env:
+          HEALTHCHECK_URL: ${{ github.event.inputs.environment_url || 'https://mingo.center/healthz.json' }}
+        run: node tooling/check-frontend-health.mjs
+
+  rollback-on-failure:
+    if: failure()
+    needs:
+      - deploy
+      - smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Roll back failed release
+        env:
+          HOSTINGER_DEPLOYMENT_MODE: ${{ vars.HOSTINGER_DEPLOYMENT_MODE }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOSTINGER_DEPLOYMENT_ROOT: ${{ secrets.HOSTINGER_DEPLOYMENT_ROOT }}
+          HOSTINGER_WEB_ROOT: ${{ secrets.HOSTINGER_WEB_ROOT }}
+        run: node tooling/deploy/hostinger-rollback.mjs

@@ -17,6 +17,7 @@ add_library(exotic_continuous_operations
  src/exotic/runtime/health_supervisor.cpp
  src/exotic/runtime/control_plane.cpp
  src/exotic/runtime/continuous_runtime.cpp
+ src/exotic/runtime/autonomous.cpp
  src/exotic/runtime/cli.cpp
  src/exotic/runtime/windows_service.cpp
  src/exotic/runtime/root_cli_bridge.cpp)
@@ -45,6 +46,8 @@ exotic_add_runtime_test(exotic_runtime_failure_tests tests/runtime/failure_injec
 exotic_add_runtime_test(exotic_runtime_scheduler_integration_tests tests/runtime/scheduler_integration_tests.cpp exotic.runtime.scheduler_integration)
 exotic_add_runtime_test(exotic_runtime_agent_stack_tests tests/runtime/agent_stack_integration_tests.cpp exotic.runtime.agent_stack)
 exotic_add_runtime_test(exotic_runtime_soak_tests tests/runtime/soak_tests.cpp exotic.runtime.soak)
+exotic_add_runtime_test(exotic_runtime_autonomous_tests tests/runtime/autonomous_machine_tests.cpp exotic.runtime.autonomous)
+exotic_add_runtime_test(exotic_runtime_autonomous_recovery_tests tests/runtime/autonomous_recovery_tests.cpp exotic.runtime.autonomous_recovery)
 
 exotic_add_runtime_test(exotic_runtime_authority_scope_tests tests/runtime/authority_scope_tests.cpp exotic.runtime.authority_scope)
 

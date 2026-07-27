@@ -31,7 +31,8 @@ int main(int argc, char** argv) {
         exotic::runtime::RuntimeCli cli{
             telemetry,
             config.workspace_id,
-            context.paths().dashboards
+            context.paths().dashboards,
+            config.workspace
         };
         return cli.run(command, std::cout);
     } catch (const std::exception& error) {
