@@ -30,6 +30,20 @@ def safe(rel):
     base=PROJECT.resolve(); p=(base/unquote(rel)).resolve()
     p.relative_to(base); return p
 
+# Paths writes must never touch: VCS internals, CI/CD definitions, deploy secrets,
+# dependency trees, and the portal's own auth token. Kept narrow on purpose so the
+# phone file editor still works for ordinary project files.
+WRITE_DENY_PREFIXES=(".git",".github","node_modules",".env","PORTAL/data")
+
+def writable(rel):
+    p=safe(rel)
+    relparts=p.relative_to(PROJECT).parts
+    for deny in WRITE_DENY_PREFIXES:
+        denyparts=Path(deny).parts
+        if relparts[:len(denyparts)]==denyparts:
+            return None
+    return p
+
 def cmd(action):
     exe=BUILD/"Release"/"EXOTIC.exe"
     return {
@@ -64,8 +78,10 @@ def run_action(action):
 
 class H(BaseHTTPRequestHandler):
     def auth(self):
-        q=parse_qs(urlparse(self.path).query).get("token",[""])[0]
-        return secrets.compare_digest(q or self.headers.get("X-EXOTIC-Token",""),cfg["token"])
+        # Header is preferred (doesn't land in browser history/autocomplete); the query
+        # string is only kept alive for the one-time bootstrap link printed at startup.
+        supplied=self.headers.get("X-EXOTIC-Token") or parse_qs(urlparse(self.path).query).get("token",[""])[0]
+        return secrets.compare_digest(supplied,cfg["token"])
     def sendj(self,x,code=200):
         b=json.dumps(x).encode();self.send_response(code);self.send_header("Content-Type","application/json");self.send_header("Content-Length",str(len(b)));self.end_headers();self.wfile.write(b)
     def static(self,p):
@@ -104,7 +120,10 @@ class H(BaseHTTPRequestHandler):
             except Exception as e:self.sendj({"error":str(e)},400)
         elif u.path=="/api/file":
             try:
-                p=safe(data["path"]); shutil.copy2(p,p.with_suffix(p.suffix+".portal-backup")); p.write_text(data["content"],encoding="utf-8"); self.sendj({"ok":True})
+                p=writable(data["path"])
+                if p is None:self.sendj({"error":"Path is not editable via the portal"},403);return
+                if p.exists():shutil.copy2(p,p.with_suffix(p.suffix+".portal-backup"))
+                p.write_text(data["content"],encoding="utf-8"); self.sendj({"ok":True})
             except Exception as e:self.sendj({"error":str(e)},400)
         else:self.sendj({"error":"Not found"},404)
     def log_message(self,*a):pass

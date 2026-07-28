@@ -1,5 +1,0 @@
-Copyright (c) 2026 MINGO. All rights reserved.
-
-Internal developer-preview license. Redistribution, resale, sublicensing,
-or representation as a production release requires written authorization.
-Provided without warranty.

@@ -36,11 +36,21 @@ function prepareSshKey() {
   const keyPath = path.join(sshDir, "id_ed25519");
   fs.writeFileSync(keyPath, `${key.trim()}\n`, { mode: 0o600 });
 
-  return keyPath;
+  let knownHostsPath;
+  const knownHosts = process.env.HOSTINGER_SSH_KNOWN_HOSTS;
+  if (knownHosts) {
+    knownHostsPath = path.join(sshDir, "known_hosts");
+    fs.writeFileSync(knownHostsPath, `${knownHosts.trim()}\n`, { mode: 0o600 });
+  }
+
+  return { keyPath, knownHostsPath };
 }
 
-function sshArgs(keyPath) {
-  return ["-i", keyPath, "-p", sshPort, "-o", "StrictHostKeyChecking=no"];
+function sshArgs(keyPath, knownHostsPath) {
+  const hostKeyOpts = knownHostsPath
+    ? ["-o", `UserKnownHostsFile=${knownHostsPath}`, "-o", "StrictHostKeyChecking=yes"]
+    : ["-o", "StrictHostKeyChecking=accept-new"];
+  return ["-i", keyPath, "-p", sshPort, ...hostKeyOpts];
 }
 
 if (mode !== "ssh-atomic" && mode !== "vps-atomic") {
@@ -54,16 +64,24 @@ required("HOSTINGER_SSH_USER", sshUser);
 required("HOSTINGER_DEPLOYMENT_ROOT", deploymentRoot);
 required("HOSTINGER_WEB_ROOT", webRoot);
 
-const keyPath = prepareSshKey();
+const { keyPath, knownHostsPath } = prepareSshKey();
 const remote = `${sshUser}@${sshHost}`;
 const releasesRoot = `${deploymentRoot}/releases`;
+const currentReleaseFile = `${deploymentRoot}/current-release.txt`;
 
+// Without an explicit target, roll back to the newest release that isn't the one
+// deploy.mjs recorded as current in current-release.txt. Falling back to "2nd most
+// recent by mtime" (the old behavior) breaks if anything besides a deploy touches a
+// release directory's mtime, and ignores the file deploy.mjs writes for this exact purpose.
 const releaseSelector = targetRelease
   ? `TARGET_RELEASE='${targetRelease}'`
-  : `TARGET_RELEASE="$(ls -1dt '${releasesRoot}'/* 2>/dev/null | sed -n '2p')"`;
+  : [
+      `CURRENT_RELEASE="$(cat '${currentReleaseFile}' 2>/dev/null || true)"`,
+      `TARGET_RELEASE="$(ls -1dt '${releasesRoot}'/* 2>/dev/null | grep -vFx "${releasesRoot}/$CURRENT_RELEASE" | sed -n '1p')"`,
+    ].join(" && ");
 
 run("ssh", [
-  ...sshArgs(keyPath),
+  ...sshArgs(keyPath, knownHostsPath),
   remote,
   [
     `set -euo pipefail`,
@@ -71,7 +89,7 @@ run("ssh", [
     `if [ -z "$TARGET_RELEASE" ]; then echo 'No rollback target found' >&2; exit 1; fi`,
     `if [ ! -d "$TARGET_RELEASE" ]; then echo 'Rollback target does not exist' >&2; exit 1; fi`,
     `ln -sfn "$TARGET_RELEASE" '${webRoot}'`,
-    `basename "$TARGET_RELEASE" > '${deploymentRoot}/current-release.txt'`,
+    `basename "$TARGET_RELEASE" > '${currentReleaseFile}'`,
   ].join(" && "),
 ]);
 

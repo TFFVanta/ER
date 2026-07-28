@@ -1,7 +1,9 @@
-node_modules/ 
-.turbo/ 
-dist/ 
-.env 
+node_modules/
+.turbo/
+dist/
+.env
+PORTAL/data/config.json
+PORTAL/data/portal.log
 Exotic/
 .exotic/
 .vs/

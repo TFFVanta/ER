@@ -1,5 +1,0 @@
-Build EXOTIC Approval, Governance, and Authority Runtime v0.4.
-
-Implement durable approval requests, human and policy approvers, quorum and multi-signature decisions, role-based and attribute-based access control, capability grants, scoped autonomy levels, separation of duties, approval expiration, revocation, emergency stop, immutable decision evidence, policy versioning, simulation-only mode, budget authorization, high-risk escalation, CLI commands, C++20 tests, CMake integration, and a complete EXOTIC save bundle.
-
-Integrate it between Proposal and execution so every scheduler job revalidates current authority immediately before running. Do not stop at architecture; provide a compile-oriented source bundle with exact files and migration code.

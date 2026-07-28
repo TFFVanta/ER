@@ -1,7 +1,0 @@
-bundle=EXOTIC-FULL-SOURCE-COLLECTION-1.1
-archive=EXOTIC-Full-Source-Collection-v1.1.zip
-sha256=aff9a2c35f73fa0bd3134d2e51330be3fb25f68e831a1eb1fe7b9561ace900a7
-release_count=9
-expanded_file_count=475
-archive_bytes=3281396
-result=PASS

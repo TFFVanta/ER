@@ -1,4 +1,0 @@
--- Executed idempotently by SqliteGovernanceRepository::migrate().
--- Tables: governance_requests, governance_decisions, governance_grants,
--- governance_policies, governance_evidence, governance_control.
--- Exact executable SQL is kept next to the repository implementation to prevent drift.

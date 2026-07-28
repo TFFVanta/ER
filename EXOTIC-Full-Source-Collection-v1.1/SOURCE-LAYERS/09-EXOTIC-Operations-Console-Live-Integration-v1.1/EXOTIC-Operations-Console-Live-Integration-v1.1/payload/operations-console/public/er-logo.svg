@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="EXOTIC ER logo">
-  <rect x="8" y="8" width="240" height="240" rx="34" fill="#050505" stroke="#050505" stroke-width="16"/>
-  <path d="M50 55h82v28H82v31h45v27H82v32h53v28H50z" fill="#fff"/>
-  <path d="M139 55h42c36 0 57 18 57 48 0 20-10 35-29 42l34 56h-37l-29-51h-8v51h-30zm30 28v42h11c17 0 27-7 27-21 0-14-10-21-27-21z" fill="#fff"/>
-  <path d="M194 130l8 16 18 3-13 13 3 18-16-8-16 8 3-18-13-13 18-3z" fill="#f4a8d4" stroke="#050505" stroke-width="4"/>
-  <rect x="24" y="24" width="16" height="16" fill="#ffd91a"/>
-  <rect x="216" y="216" width="16" height="16" fill="#9edcff"/>
-</svg>

@@ -8,6 +8,10 @@ on:
         required: false
         default: ""
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   rollback:
     runs-on: ubuntu-latest
@@ -17,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -36,6 +40,7 @@ jobs:
           HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
           HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          HOSTINGER_SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
           HOSTINGER_DEPLOYMENT_ROOT: ${{ secrets.HOSTINGER_DEPLOYMENT_ROOT }}
           HOSTINGER_WEB_ROOT: ${{ secrets.HOSTINGER_WEB_ROOT }}
         run: node tooling/deploy/hostinger-rollback.mjs

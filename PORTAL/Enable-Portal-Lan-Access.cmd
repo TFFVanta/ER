@@ -1,3 +1,3 @@
 @echo off
-netsh advfirewall firewall add rule name="EXOTIC Portal" dir=in action=allow protocol=TCP localport=8765
+netsh advfirewall firewall add rule name="EXOTIC Portal" dir=in action=allow protocol=TCP localport=8765 profile=private
 pause

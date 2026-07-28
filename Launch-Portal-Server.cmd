@@ -1,4 +1,2 @@
 @echo off
-cd /d "%~dp0"
-python server.py
-pause
+call "%~dp0PORTAL\Launch-Portal-Server.cmd"

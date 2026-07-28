@@ -1,3 +1,2 @@
 @echo off
-netsh advfirewall firewall add rule name="EXOTIC Portal" dir=in action=allow protocol=TCP localport=8765
-pause
+call "%~dp0PORTAL\Enable-Portal-Lan-Access.cmd"

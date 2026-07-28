@@ -47,11 +47,23 @@ function prepareSshKey() {
   const keyPath = path.join(sshDir, "id_ed25519");
   fs.writeFileSync(keyPath, `${key.trim()}\n`, { mode: 0o600 });
 
-  return { sshDir, keyPath };
+  let knownHostsPath;
+  const knownHosts = process.env.HOSTINGER_SSH_KNOWN_HOSTS;
+  if (knownHosts) {
+    knownHostsPath = path.join(sshDir, "known_hosts");
+    fs.writeFileSync(knownHostsPath, `${knownHosts.trim()}\n`, { mode: 0o600 });
+  }
+
+  return { sshDir, keyPath, knownHostsPath };
 }
 
-function sshArgs(keyPath) {
-  return ["-i", keyPath, "-p", sshPort, "-o", "StrictHostKeyChecking=no"];
+function sshArgs(keyPath, knownHostsPath) {
+  // Prefer a pinned known_hosts (verified) over blind trust-on-first-use, but never
+  // fall all the way to StrictHostKeyChecking=no — that accepts silent MITM.
+  const hostKeyOpts = knownHostsPath
+    ? ["-o", `UserKnownHostsFile=${knownHostsPath}`, "-o", "StrictHostKeyChecking=yes"]
+    : ["-o", "StrictHostKeyChecking=accept-new"];
+  return ["-i", keyPath, "-p", sshPort, ...hostKeyOpts];
 }
 
 function createArchive() {
@@ -60,7 +72,7 @@ function createArchive() {
   return archivePath;
 }
 
-function deployAtomic(keyPath) {
+function deployAtomic(keyPath, knownHostsPath) {
   required("HOSTINGER_SSH_HOST", sshHost);
   required("HOSTINGER_SSH_USER", sshUser);
   required("HOSTINGER_DEPLOYMENT_ROOT", deploymentRoot);
@@ -72,10 +84,10 @@ function deployAtomic(keyPath) {
   const releaseRoot = `${releasesRoot}/${releaseId}`;
   const uploadPath = `${deploymentRoot}/incoming-${releaseId}.tar.gz`;
 
-  run("scp", [...sshArgs(keyPath), archivePath, `${remote}:${uploadPath}`]);
+  run("scp", [...sshArgs(keyPath, knownHostsPath), archivePath, `${remote}:${uploadPath}`]);
 
   run("ssh", [
-    ...sshArgs(keyPath),
+    ...sshArgs(keyPath, knownHostsPath),
     remote,
     [
       `set -euo pipefail`,
@@ -92,7 +104,7 @@ function deployAtomic(keyPath) {
   console.log(`Atomic deployment completed for release ${releaseId}`);
 }
 
-function deployStatic(keyPath) {
+function deployStatic(keyPath, knownHostsPath) {
   required("HOSTINGER_SSH_HOST", sshHost);
   required("HOSTINGER_SSH_USER", sshUser);
   required("HOSTINGER_WEB_ROOT", webRoot);
@@ -101,10 +113,10 @@ function deployStatic(keyPath) {
   const remote = `${sshUser}@${sshHost}`;
   const uploadPath = `${webRoot.replace(/\/$/, "")}/incoming-${releaseId}.tar.gz`;
 
-  run("scp", [...sshArgs(keyPath), archivePath, `${remote}:${uploadPath}`]);
+  run("scp", [...sshArgs(keyPath, knownHostsPath), archivePath, `${remote}:${uploadPath}`]);
 
   run("ssh", [
-    ...sshArgs(keyPath),
+    ...sshArgs(keyPath, knownHostsPath),
     remote,
     [
       `set -euo pipefail`,
@@ -123,12 +135,12 @@ if (mode === "manual-hold") {
   );
 }
 
-const { keyPath } = prepareSshKey();
+const { keyPath, knownHostsPath } = prepareSshKey();
 
 if (mode === "ssh-atomic" || mode === "vps-atomic") {
-  deployAtomic(keyPath);
+  deployAtomic(keyPath, knownHostsPath);
 } else if (mode === "ssh-static") {
-  deployStatic(keyPath);
+  deployStatic(keyPath, knownHostsPath);
 } else {
   throw new Error(`Unsupported HOSTINGER_DEPLOYMENT_MODE: ${mode}`);
 }

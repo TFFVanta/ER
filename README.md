@@ -8,7 +8,9 @@ It turns a broad request into a real venture workspace across ideas, business, p
 
 The system must produce real editable outputs and connected implementations, not just plans or suggestions.
 
-## Run
+## Getting Started
+
+This directory is the live working tree — clone or pull it, there is nothing to extract.
 
 ```powershell
 npm install
@@ -31,14 +33,28 @@ npm run test
 npm run exo -- help
 ```
 
-## Standardized Entry Scripts
+## Phone Portal
+
+`PORTAL/` is a separate, LAN-only control surface (Python + vanilla JS) for checking build
+status, viewing logs, and browsing/editing project files from a phone. It is independent of
+the Vite portal above.
+
+1. Double-click `PORTAL\Launch-Portal-Server.cmd` (or run `python PORTAL/server.py`). Keep the
+   console window open — it prints the pairing URL.
+2. First run generates a fresh auth token in `PORTAL/data/config.json` (gitignored — never
+   commit it).
+3. On your phone, open the printed URL while both devices are on the same Wi-Fi, then
+   "Add to Home Screen" in Chrome for an app-like shortcut.
+4. Optional: right-click `PORTAL\Enable-Portal-Lan-Access.cmd` → Run as administrator, once, to
+   open the firewall port on your **private** network profile only.
+
+Never expose port 8765 to the public internet.
+
+## Entry Scripts
 
 ```text
-Launch-Workspace-Integration.cmd       Run the full workspace integration flow
-Invoke-Workspace-Integration.ps1       PowerShell integration entrypoint
-Launch-Operations-Console.cmd          Open the live operations console and Codex bridge
-Launch-Portal-Server.cmd               Start the root portal server
-Install-Exotic-Desktop.cmd             Install the desktop HTA package
-GETTING_STARTED.txt                    Root startup instructions
-PORTAL_QUICK_START.txt                 Root portal quick-start guide
+Launch-Operations-Console.cmd    Open the live operations console and Codex bridge
+Launch-Portal-Server.cmd         Start the phone portal server (delegates to PORTAL/)
+Enable-Portal-Lan-Access.cmd     Open the portal's firewall port on the private network profile
+Install-Exotic-Desktop.cmd       Install the desktop HTA shortcut
 ```
