@@ -1,0 +1,12 @@
+{
+  "name": "@exotic/pattern-composer",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reusable roadmap step patterns - a single source of truth for roadmap.json seeds instead of hand-duplicated lists.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

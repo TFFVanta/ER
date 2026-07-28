@@ -4,6 +4,7 @@ import path from 'node:path';
 import cp from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { createObjectiveStore } from './objectives.js';
+import { runHarmonyCheck } from './harmony.js';
 
 const args = process.argv.slice(2);
 const nl = String.fromCharCode(10);
@@ -689,6 +690,101 @@ async function loadWorkspacePackage(name) {
   return import(pathToFileURL(distEntry).href);
 }
 
+function patternHelp() {
+  console.log([
+    'Pattern Commands:',
+    '  pattern list',
+    '  pattern show <name>',
+    '  pattern apply <name> [--force]',
+    ''
+  ].join(nl));
+}
+
+async function patternCommand(argv) {
+  const subcommand = argv[1];
+  const { values } = parseFlags(argv.slice(2));
+  const { roadmapPatterns, findPattern, composeRoadmap } = await loadWorkspacePackage('pattern-composer');
+
+  if (subcommand === 'list') {
+    for (const pattern of roadmapPatterns) {
+      console.log(`${pattern.name}  (${pattern.steps.length} steps)  ${pattern.description}`);
+    }
+    return;
+  }
+
+  if (subcommand === 'show') {
+    const name = argv[2];
+    const pattern = findPattern(name);
+    if (!pattern) {
+      console.error(`Unknown pattern: ${name}`);
+      process.exit(1);
+    }
+    console.log(`${pattern.name} - ${pattern.description}`);
+    console.log('');
+    for (const step of pattern.steps) {
+      console.log(`${step.id}  [${step.lane}]  ${step.title}  (depends on: ${step.dependsOn.join(', ') || 'none'})`);
+    }
+    return;
+  }
+
+  if (subcommand === 'apply') {
+    const name = argv[2];
+    if (!name) {
+      console.error('Missing pattern name. Usage: exo pattern apply <name> [--force]');
+      process.exit(1);
+    }
+    const roadmapFile = path.join(bridgeRoot(), 'roadmap.json');
+    if (fs.existsSync(roadmapFile) && !values.force) {
+      console.error(
+        `${roadmapFile} already exists. Pass --force to overwrite it - this discards any in-progress roadmap state.`
+      );
+      process.exit(1);
+    }
+    const roadmap = composeRoadmap(name);
+    fs.mkdirSync(bridgeRoot(), { recursive: true });
+    fs.writeFileSync(roadmapFile, JSON.stringify(roadmap, null, 2));
+    console.log(`Wrote ${roadmap.length} steps from pattern "${name}" to ${roadmapFile}`);
+    return;
+  }
+
+  patternHelp();
+}
+
+function harmonyHelp() {
+  console.log([
+    'Harmony Commands:',
+    '  harmony check',
+    ''
+  ].join(nl));
+}
+
+async function harmonyCommand(argv) {
+  const subcommand = argv[1] || 'check';
+  if (subcommand !== 'check') {
+    harmonyHelp();
+    return;
+  }
+
+  const [{ ventureWorkspaceContract }, { slugify }] = await Promise.all([
+    loadWorkspacePackage('contracts'),
+    loadWorkspacePackage('entity'),
+  ]);
+  const findings = runHarmonyCheck({
+    bridgeRoot: bridgeRoot(),
+    workspaceRoot: path.join(bridgeRoot(), '..', 'workspaces'),
+    ventureWorkspaceContract,
+    slugify,
+  });
+
+  let hasError = false;
+  for (const item of findings) {
+    const prefix = item.level === 'error' ? 'ERROR' : item.level === 'warn' ? 'WARN' : 'OK';
+    console.log(`[${prefix}] ${item.message}`);
+    if (item.level === 'error') hasError = true;
+  }
+  if (hasError) process.exit(1);
+}
+
 function workerHelp() {
   console.log([
     'Worker Commands:',
@@ -853,6 +949,10 @@ function help() {
     '  selector learn-execution <selector-id>',
     '  worker list',
     '  worker run <step-id> [--backend claude|codex|local]',
+    '  pattern list',
+    '  pattern show <name>',
+    '  pattern apply <name> [--force]',
+    '  harmony check',
     '  new package <name>',
     '  build',
     '  help',
@@ -878,6 +978,16 @@ if (args[0] === 'doctor') {
   selectorCommand(args);
 } else if (args[0] === 'worker') {
   workerCommand(args).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+} else if (args[0] === 'pattern') {
+  patternCommand(args).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+} else if (args[0] === 'harmony') {
+  harmonyCommand(args).catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });

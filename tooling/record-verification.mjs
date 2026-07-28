@@ -23,20 +23,23 @@ function workspaceManifests(directory) {
 // is meant to be trustworthy evidence on its own, including when run standalone.
 function runScript(workspace, scriptName) {
   const args = ['run', scriptName];
-  if (clean && scriptName === 'build') args.push('--', '--force');
-  // npm ships as a .cmd shim on Windows; spawning it without a shell fails with EINVAL
-  // regardless of arguments. Node warns when shell:true is combined with an args array
-  // (unescaped concatenation), so build a single command string instead - scriptName only
-  // ever comes from our own package.json scan (workspaceManifests), never external input.
-  const isWin = process.platform === 'win32';
+  // Direct package execution bypasses Turbo's cache, so clean mode must not forward
+  // Turbo's --force option into package scripts such as `tsc -p`.
+  const bundledNpmCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  const npmCli = process.env.npm_execpath || (fs.existsSync(bundledNpmCli) ? bundledNpmCli : null);
+  const command = npmCli ? process.execPath : 'npm';
+  const commandArgs = npmCli ? [npmCli, ...args] : args;
+  const childEnv = { ...process.env };
+  const pathKey = Object.keys(childEnv).find(key => key.toLowerCase() === 'path') ?? 'PATH';
+  childEnv[pathKey] = [path.dirname(process.execPath), childEnv[pathKey]].filter(Boolean).join(path.delimiter);
   const result = spawnSync(
-    isWin ? `npm ${args.join(' ')}` : 'npm',
-    isWin ? undefined : args,
+    command,
+    commandArgs,
     {
       cwd: workspace.dir,
       stdio: 'pipe',
       encoding: 'utf8',
-      shell: isWin,
+      env: childEnv,
     },
   );
   const exitCode = result.status ?? 1;

@@ -1,23 +1,42 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 // A snapshot of `git status --porcelain`, keyed by path, so evidence capture can compute
 // what actually changed during a dispatch instead of attributing a pre-existing dirty
 // working tree to the worker that just ran.
 export interface WorkingTreeSnapshot {
   entries: Map<string, string>;
+  fingerprints: Map<string, string>;
+}
+
+function fingerprintFile(cwd: string, relativePath: string): string {
+  const filePath = path.join(cwd, relativePath.split(" -> ").at(-1) ?? relativePath);
+  try {
+    const stat = fs.lstatSync(filePath);
+    if (stat.isSymbolicLink()) return `link:${fs.readlinkSync(filePath)}`;
+    if (!stat.isFile()) return `${stat.mode}:${stat.size}:${stat.mtimeMs}`;
+    return createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+  } catch {
+    return "missing";
+  }
 }
 
 export function snapshotWorkingTree(cwd: string): WorkingTreeSnapshot {
-  const output = execFileSync("git", ["status", "--porcelain"], {
+  const output = execFileSync("git", ["status", "--porcelain=v1", "-uall"], {
     cwd,
     encoding: "utf8",
   });
   const entries = new Map<string, string>();
+  const fingerprints = new Map<string, string>();
   for (const line of output.split(/\r?\n/)) {
     if (!line) continue;
-    entries.set(line.slice(3).trim(), line.slice(0, 2));
+    const relativePath = line.slice(3).trim();
+    entries.set(relativePath, line.slice(0, 2));
+    fingerprints.set(relativePath, fingerprintFile(cwd, relativePath));
   }
-  return { entries };
+  return { entries, fingerprints };
 }
 
 export interface CaptureEvidenceOptions {
@@ -39,7 +58,10 @@ export function captureEvidence({
   const evidence: string[] = [];
 
   for (const [path, status] of after.entries) {
-    if (before.entries.get(path) !== status) {
+    if (
+      before.entries.get(path) !== status ||
+      before.fingerprints.get(path) !== after.fingerprints.get(path)
+    ) {
       evidence.push(`${status.trim() || "changed"} ${path}`);
     }
   }

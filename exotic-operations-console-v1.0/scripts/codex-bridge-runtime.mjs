@@ -12,11 +12,12 @@ import {
 } from "../../packages/entity/dist/index.js";
 import { ventureWorkspaceContract } from "../../packages/contracts/dist/index.js";
 import { dispatchStep } from "../../packages/codex-worker/dist/index.js";
+import { composeRoadmap } from "../../packages/pattern-composer/dist/index.js";
 
 // Which backend the auto-tick loop dispatches ready steps to. "claude"/"codex" require the
 // matching CLI on PATH; "local" requires EXOTIC_LOCAL_MODEL_ENDPOINT. See
 // packages/codex-worker/src/backends.ts.
-const workerBackendName = process.env.EXOTIC_WORKER_BACKEND || "claude";
+const workerBackendName = process.env.EXOTIC_WORKER_BACKEND || "codex";
 
 const consoleRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -73,6 +74,10 @@ const types = {
 const port = Number(process.env.PORT || 8787);
 const host = process.env.EXOTIC_BRIDGE_HOST || "127.0.0.1";
 const autoTickMs = Number(process.env.EXOTIC_AUTO_TICK_MS || 300000);
+// Tick optimizer: autoTickMs doubles as the idle-backoff ceiling (nothing ready/running),
+// while EXOTIC_AUTO_TICK_MIN_MS is how fast the loop ticks while there's ready or active
+// work - see scheduleNextTick below.
+const tickMinMs = Number(process.env.EXOTIC_AUTO_TICK_MIN_MS || 15000);
 const requestedSwarmConcurrency = Number(
   process.env.EXOTIC_SWARM_CONCURRENCY || 4,
 );
@@ -83,86 +88,12 @@ const swarmConcurrency = Number.isFinite(requestedSwarmConcurrency)
 function ensureBridgeFiles() {
   fs.mkdirSync(bridgeRoot, { recursive: true });
   if (!fs.existsSync(roadmapFile)) {
+    // Previously a hand-duplicated 6-item array here had already drifted from the real,
+    // longer 16-item roadmap this bridge actually runs against - see
+    // packages/pattern-composer, now the one source of truth both seed from.
     fs.writeFileSync(
       roadmapFile,
-      JSON.stringify(
-        [
-          {
-            id: "P1-01",
-            title: "Stabilize the monorepo build",
-            summary:
-              "Fix the broken top-level TypeScript packages and get the repo back to a clean baseline.",
-            priority: "Critical",
-            owner: "Codex",
-            lane: "foundation",
-            dependsOn: [],
-            status: "running",
-            progress: 25,
-          },
-          {
-            id: "P1-02",
-            title: "Define the canonical venture model",
-            summary:
-              "Create the shared venture/objective/artifact/evidence/workflow schema for all studios.",
-            priority: "Critical",
-            owner: "Codex",
-            lane: "canon",
-            dependsOn: ["P1-01"],
-            status: "pending",
-            progress: 0,
-          },
-          {
-            id: "P1-03",
-            title: "Choose the unified workspace shell",
-            summary:
-              "Pick the main EXOTIC app shell and map studios into one connected environment.",
-            priority: "High",
-            owner: "Codex",
-            lane: "workspace",
-            dependsOn: ["P1-02"],
-            status: "pending",
-            progress: 0,
-          },
-          {
-            id: "P1-04",
-            title: "Bootstrap broad request to venture workspace",
-            summary:
-              "Turn build this business into a generated EXOTIC venture workspace.",
-            priority: "High",
-            owner: "Codex",
-            lane: "workspace",
-            dependsOn: ["P1-03"],
-            status: "pending",
-            progress: 0,
-          },
-          {
-            id: "P1-05",
-            title: "Initialize the Ideas studio",
-            summary:
-              "Materialize the Ideas studio workspace and opportunity framing surface.",
-            priority: "High",
-            owner: "Codex",
-            lane: "ideas",
-            dependsOn: ["P1-04"],
-            status: "pending",
-            progress: 0,
-          },
-          {
-            id: "P1-12",
-            title: "Initialize the Research studio",
-            summary:
-              "Materialize the Research studio workspace and evidence surface.",
-            priority: "High",
-            owner: "Codex",
-            lane: "research",
-            dependsOn: ["P1-04"],
-            status: "pending",
-            progress: 0,
-          },
-        ],
-        null,
-        2,
-      ),
+      JSON.stringify(composeRoadmap("phase1-foundation"), null, 2),
     );
   }
   if (!fs.existsSync(bridgeStateFile)) {
@@ -177,7 +108,8 @@ function ensureBridgeFiles() {
             "Stabilize the repo, define the canonical venture model, and connect the studios through one shared workspace system.",
           initialRequest: "build this business",
           updatedAt: new Date().toISOString(),
-          lastCodexUpdate: "Bridge initialized. Auto mode is paused - resume it once a worker backend is ready.",
+          lastCodexUpdate:
+            "Bridge initialized. Auto mode is paused - resume it once a worker backend is ready.",
           blockers: [],
           status: "running",
           // Defaults to paused: the auto-tick loop now dispatches real work to a worker
@@ -214,13 +146,25 @@ function ensureBridgeFiles() {
 function ensureWorkspaceFile() {
   const state = readBridgeState();
   const primaryWorkspace = parseWorkspace(readJson(workspaceFile, null));
-  if (primaryWorkspace) return primaryWorkspace;
+  if (primaryWorkspace) {
+    if (!workspaceNeedsGraphMigration(primaryWorkspace))
+      return primaryWorkspace;
+    const migratedWorkspace = migrateGeneratedWorkspace(
+      primaryWorkspace,
+      state,
+    );
+    writeWorkspacePayload(migratedWorkspace);
+    return migratedWorkspace;
+  }
   const fallbackWorkspace = parseWorkspace(
     readJson(workspaceFallbackFile, null),
   );
   if (fallbackWorkspace) {
-    writeWorkspacePayload(fallbackWorkspace);
-    return fallbackWorkspace;
+    const currentWorkspace = workspaceNeedsGraphMigration(fallbackWorkspace)
+      ? migrateGeneratedWorkspace(fallbackWorkspace, state)
+      : fallbackWorkspace;
+    writeWorkspacePayload(currentWorkspace);
+    return currentWorkspace;
   }
   const workspace = createVentureWorkspace({
     request: state.initialRequest || state.summary || "build this business",
@@ -230,6 +174,96 @@ function ensureWorkspaceFile() {
   });
   writeWorkspacePayload(workspace);
   return workspace;
+}
+
+function workspaceNeedsGraphMigration(workspace) {
+  const implementedTaskIds = new Set(
+    workspace.graphEdges
+      .filter(
+        (edge) =>
+          edge.fromEntityType === "task" &&
+          edge.relation === "implements" &&
+          edge.toEntityType === "studio-scope",
+      )
+      .map((edge) => edge.fromEntityId),
+  );
+  const producingTaskIds = new Set(
+    workspace.graphEdges
+      .filter(
+        (edge) =>
+          edge.fromEntityType === "task" &&
+          edge.relation === "produces" &&
+          edge.toEntityType === "artifact",
+      )
+      .map((edge) => edge.fromEntityId),
+  );
+  return workspace.tasks.some(
+    (task) =>
+      !implementedTaskIds.has(task.taskId) ||
+      !producingTaskIds.has(task.taskId),
+  );
+}
+
+function migrateGeneratedWorkspace(current, state) {
+  const generated = createVentureWorkspace({
+    request:
+      current.venture.thesis ||
+      state.initialRequest ||
+      state.summary ||
+      "build this business",
+    operator: current.venture.operator || "wakez",
+    ventureName: current.venture.name,
+    ventureType: current.venture.type,
+    ventureId: current.venture.ventureId,
+    now:
+      current.generatedAt ||
+      current.venture.createdAt ||
+      new Date().toISOString(),
+  });
+  const collectionIds = {
+    objectives: "objectiveId",
+    studioScopes: "studioScopeId",
+    workflows: "workflowId",
+    tasks: "taskId",
+    artifacts: "artifactId",
+    evidenceRecords: "evidenceId",
+    decisions: "decisionId",
+    approvals: "approvalId",
+    resources: "resourceId",
+    metrics: "metricId",
+    memoryRecords: "memoryId",
+  };
+
+  for (const [field, idField] of Object.entries(collectionIds)) {
+    const currentRecords = new Map(
+      (current[field] || []).map((record) => [record[idField], record]),
+    );
+    const generatedIds = new Set(
+      generated[field].map((record) => record[idField]),
+    );
+    generated[field] = [
+      ...generated[field].map((record) => ({
+        ...record,
+        ...(currentRecords.get(record[idField]) || {}),
+      })),
+      ...(current[field] || []).filter(
+        (record) => !generatedIds.has(record[idField]),
+      ),
+    ];
+  }
+
+  const generatedEdgeIds = new Set(
+    generated.graphEdges.map((edge) => edge.edgeId),
+  );
+  const runtimeEdges = (current.graphEdges || []).filter(
+    (edge) =>
+      edge.edgeId.includes("RUNTIME") && !generatedEdgeIds.has(edge.edgeId),
+  );
+  return ventureWorkspaceContract.parse({
+    ...generated,
+    venture: { ...generated.venture, ...current.venture },
+    graphEdges: [...generated.graphEdges, ...runtimeEdges],
+  });
 }
 
 function parseWorkspace(candidate) {
@@ -2385,23 +2419,22 @@ function buildSnapshot() {
             generatedAt: state.updatedAt || now,
           }
         : null),
-    executionFabric:
-      state.executionFabric || {
-        fabricId: productionFabric.id,
-        strategy: productionFabric.strategy,
-        maxConcurrency: productionFabric.maxConcurrency,
-        verificationBarrier: true,
-        cells: productionFabric.activeStepIds.map((stepId) => {
-          const step = roadmap.find((item) => item.id === stepId);
-          return {
-            stepId,
-            lane: step?.lane || "roadmap",
-            title: step?.title || stepId,
-            evidenceRequired: true,
-          };
-        }),
-        generatedAt: state.updatedAt || now,
-      },
+    executionFabric: state.executionFabric || {
+      fabricId: productionFabric.id,
+      strategy: productionFabric.strategy,
+      maxConcurrency: productionFabric.maxConcurrency,
+      verificationBarrier: true,
+      cells: productionFabric.activeStepIds.map((stepId) => {
+        const step = roadmap.find((item) => item.id === stepId);
+        return {
+          stepId,
+          lane: step?.lane || "roadmap",
+          title: step?.title || stepId,
+          evidenceRequired: true,
+        };
+      }),
+      generatedAt: state.updatedAt || now,
+    },
     repo: {
       workspace: repoRoot,
       branch: repo.branch,
@@ -2609,12 +2642,19 @@ function updateRoadmapItem(payload) {
     recordRoadmapEvidence(ensureWorkspaceFile(), updated, evidence);
   }
 
+  const currentState = readBridgeState();
   const state = writeBridgeState({
+    blockers: (Array.isArray(currentState.blockers) ? currentState.blockers : []).filter(
+      (blocker) => blocker.stepId !== updated.id,
+    ),
     lastCodexUpdate: `Roadmap step ${updated.id} set to ${updated.status} from operations console.`,
   });
   if (state.autoMode !== "paused") {
     autoAdvanceRoadmap().catch((error) => {
-      console.error("autoAdvanceRoadmap failed:", error instanceof Error ? error.message : error);
+      console.error(
+        "autoAdvanceRoadmap failed:",
+        error instanceof Error ? error.message : error,
+      );
     });
   }
   return updated;
@@ -2622,7 +2662,7 @@ function updateRoadmapItem(payload) {
 
 function setAutoMode(mode) {
   const nextMode = mode === "paused" ? "paused" : "running";
-  return writeBridgeState({
+  const state = writeBridgeState({
     autoMode: nextMode,
     status: nextMode,
     lastCodexUpdate:
@@ -2630,6 +2670,10 @@ function setAutoMode(mode) {
         ? "Auto mode resumed from operations console."
         : "Auto mode paused from operations console.",
   });
+  if (nextMode === "running") {
+    wake();
+  }
+  return state;
 }
 
 // Guards against overlapping dispatches: a worker invocation can take a while (it waits
@@ -2637,14 +2681,18 @@ function setAutoMode(mode) {
 // dispatch plus the next scheduled tick could spawn a second worker for the same step.
 let dispatchInFlight = false;
 
+// Returns whether there's ready or active work outstanding after this tick - the tick
+// optimizer uses this to decide how soon to schedule the next one (see scheduleNextTick
+// below) instead of polling on a fixed interval regardless of whether there's anything to do.
 async function autoAdvanceRoadmap() {
-  if (dispatchInFlight) return;
+  lastTickAt = new Date().toISOString();
+  if (dispatchInFlight) return false;
   ensureBridgeFiles();
   const state = readBridgeState();
-  if (state.autoMode === "paused") return;
+  if (state.autoMode === "paused") return false;
 
   const roadmap = readRoadmap();
-  if (!roadmap.length) return;
+  if (!roadmap.length) return false;
 
   const nextRoadmap = roadmap.map((item) => ({ ...item }));
   let fabric = buildRoadmapProductionFabric(nextRoadmap);
@@ -2663,7 +2711,7 @@ async function autoAdvanceRoadmap() {
     writeRoadmap(nextRoadmap);
     fabric = buildRoadmapProductionFabric(nextRoadmap);
   }
-  if (!activeSteps.length) return;
+  if (!activeSteps.length) return fabric.readyStepIds.length > 0;
 
   const activeStep = activeSteps[0];
 
@@ -2697,6 +2745,24 @@ async function autoAdvanceRoadmap() {
   appendExecutionEvidence(nextRoadmap, refreshedState, activeStep);
 
   await dispatchActiveStep(activeStep);
+
+  const finalFabric = buildRoadmapProductionFabric(readRoadmap());
+  return finalFabric.activeStepIds.length > 0 || finalFabric.readyStepIds.length > 0;
+}
+
+// Stableizer: how many consecutive dispatch failures a step tolerates before auto-tick
+// stops retrying it (the operator still sees it via /api/v1/health and exo harmony check),
+// and the backoff ceiling between retries so a broken backend doesn't get hammered every tick.
+const workerMaxRetries = Number(process.env.EXOTIC_WORKER_MAX_RETRIES || 3);
+const workerBackoffCapMs = Number(process.env.EXOTIC_WORKER_BACKOFF_CAP_MS || 6 * autoTickMs);
+
+let lastTickAt = null;
+let consecutiveDispatchFailures = 0;
+
+function findBlocker(state, stepId) {
+  return (Array.isArray(state.blockers) ? state.blockers : []).find(
+    (blocker) => blocker.stepId === stepId,
+  );
 }
 
 // Actually dispatches the active step to a real worker backend and records the outcome -
@@ -2705,11 +2771,26 @@ async function autoAdvanceRoadmap() {
 async function dispatchActiveStep(step) {
   dispatchInFlight = true;
   try {
+    const state = readBridgeState();
+    const existingBlocker = findBlocker(state, step.id);
+    if (existingBlocker?.retryAfter && new Date(existingBlocker.retryAfter) > new Date()) {
+      return; // still backing off from a prior failure - skip this tick, not stuck forever
+    }
+    if (existingBlocker && (existingBlocker.attempts || 0) >= workerMaxRetries) {
+      return; // exhausted retries - left for the operator, not silently retried forever
+    }
+
     const result = await dispatchStep(
-      { id: step.id, title: step.title, lane: step.lane, dependsOn: step.dependsOn },
+      {
+        id: step.id,
+        title: step.title,
+        lane: step.lane,
+        dependsOn: step.dependsOn,
+      },
       { backend: workerBackendName, cwd: repoRoot },
     );
     if (result.status === "completed") {
+      consecutiveDispatchFailures = 0;
       updateRoadmapItem({
         id: step.id,
         status: "completed",
@@ -2717,17 +2798,29 @@ async function dispatchActiveStep(step) {
         evidence: result.receipt.evidence,
       });
     } else {
-      const state = readBridgeState();
+      consecutiveDispatchFailures += 1;
+      const attempts = (existingBlocker?.attempts || 0) + 1;
+      const exhausted = attempts >= workerMaxRetries;
+      const backoffMs = Math.min(attempts * autoTickMs, workerBackoffCapMs);
       const blockers = Array.isArray(state.blockers) ? state.blockers : [];
       writeBridgeState({
         blockers: [
           ...blockers.filter((blocker) => blocker.stepId !== step.id),
-          { stepId: step.id, reason: result.error, recordedAt: new Date().toISOString() },
+          {
+            stepId: step.id,
+            reason: result.error,
+            attempts,
+            retryAfter: exhausted ? null : new Date(Date.now() + backoffMs).toISOString(),
+            recordedAt: new Date().toISOString(),
+          },
         ],
-        lastCodexUpdate: `Worker dispatch for ${step.id} (${workerBackendName}) did not produce evidence: ${result.error}`,
+        lastCodexUpdate: exhausted
+          ? `Worker dispatch for ${step.id} (${workerBackendName}) failed ${attempts} times and will not auto-retry: ${result.error}`
+          : `Worker dispatch for ${step.id} (${workerBackendName}) did not produce evidence (attempt ${attempts}/${workerMaxRetries}, retrying later): ${result.error}`,
       });
     }
   } catch (error) {
+    consecutiveDispatchFailures += 1;
     const message = error instanceof Error ? error.message : String(error);
     writeBridgeState({
       lastCodexUpdate: `Worker dispatch for ${step.id} (${workerBackendName}) crashed: ${message}`,
@@ -2737,19 +2830,64 @@ async function dispatchActiveStep(step) {
   }
 }
 
+// Tick optimizer: a self-rescheduling timer instead of a fixed setInterval, so the loop
+// ticks fast (tickMinMs) while there's ready or active work and backs off to the slow
+// ceiling (autoTickMs) once the roadmap is fully blocked or fully done - and stops
+// rescheduling entirely while paused rather than firing uselessly every autoTickMs.
+let tickTimer = null;
+
+async function runTickCycle() {
+  tickTimer = null;
+  let hasWork = false;
+  try {
+    hasWork = await autoAdvanceRoadmap();
+  } catch (error) {
+    console.error(
+      "autoAdvanceRoadmap failed:",
+      error instanceof Error ? error.message : error,
+    );
+  }
+  if (readBridgeState().autoMode === "paused") return; // wake() restarts it on resume
+  scheduleNextTick(hasWork ? tickMinMs : autoTickMs);
+}
+
+function scheduleNextTick(delayMs) {
+  if (tickTimer) clearTimeout(tickTimer);
+  tickTimer = setTimeout(runTickCycle, delayMs);
+}
+
+// Restarts the loop if it isn't already running or scheduled. Called on startup and
+// whenever auto-mode transitions from paused back to running, since a stopped loop has no
+// pending timer to fire on its own.
+function wake() {
+  if (tickTimer) return;
+  runTickCycle();
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(
     req.url || "/",
     `http://${req.headers.host || "127.0.0.1"}`,
   );
   if (req.method === "OPTIONS") return json(res, 200, {});
-  if (url.pathname === "/api/v1/health")
+  if (url.pathname === "/api/v1/health") {
+    // Distinguishes "the process is up" from "the tick loop is actually alive" - a hung or
+    // crashed loop still leaves the HTTP server responding, so ok:true alone can't tell you
+    // that. tickAgeMs > 2x the idle-backoff ceiling means it's missed at least one full cycle.
+    const tickAgeMs = lastTickAt ? Date.now() - new Date(lastTickAt).getTime() : null;
+    const autoModeNow = readBridgeState().autoMode;
     return json(res, 200, {
       ok: true,
       runtime: "EXOTIC Codex Bridge Runtime",
       version: "1.0.0",
       mode: "codex-bridge",
+      autoMode: autoModeNow,
+      lastTickAt,
+      tickAgeMs,
+      stale: autoModeNow !== "paused" && (tickAgeMs === null || tickAgeMs > 2 * autoTickMs),
+      consecutiveDispatchFailures,
     });
+  }
   if (url.pathname === "/api/v1/console/snapshot")
     return json(res, 200, buildSnapshot());
   if (url.pathname === "/api/v1/bridge/state")
@@ -2865,14 +3003,10 @@ const server = http.createServer((req, res) => {
 });
 
 ensureBridgeFiles();
-setInterval(() => {
-  autoAdvanceRoadmap().catch((error) => {
-    console.error("autoAdvanceRoadmap failed:", error instanceof Error ? error.message : error);
-  });
-}, autoTickMs);
+wake();
 server.listen(port, host, () => {
   console.log(`EXOTIC Codex bridge runtime: http://${host}:${port}`);
   console.log(`Bridge root: ${bridgeRoot}`);
-  console.log(`Auto tick interval: ${autoTickMs}ms`);
+  console.log(`Auto tick interval: ${tickMinMs}ms (busy) - ${autoTickMs}ms (idle)`);
   console.log(`Production Fabric concurrency: ${swarmConcurrency}`);
 });

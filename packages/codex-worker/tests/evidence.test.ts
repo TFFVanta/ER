@@ -44,6 +44,15 @@ describe('captureEvidence', () => {
     expect(evidence).toEqual([]);
   });
 
+  it('reports content changes to a file that was already dirty', () => {
+    const filePath = path.join(repoDir, 'already-dirty.txt');
+    fs.writeFileSync(filePath, 'pre-existing change');
+    const before = snapshotWorkingTree(repoDir);
+    fs.writeFileSync(filePath, 'worker changed the same dirty file');
+    const evidence = captureEvidence({ cwd: repoDir, before });
+    expect(evidence).toEqual(['?? already-dirty.txt']);
+  });
+
   it('appends a test summary when provided', () => {
     const before = snapshotWorkingTree(repoDir);
     const evidence = captureEvidence({ cwd: repoDir, before, testSummary: '3 passed' });

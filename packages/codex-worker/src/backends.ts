@@ -1,4 +1,7 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import fs from "node:fs";
+import path from "node:path";
 import type { ProductionCellContext, ProductionReceipt, ProductionWorker } from "@exotic/workflow";
 import { captureEvidence, snapshotWorkingTree } from "./evidence.js";
 
@@ -28,14 +31,51 @@ function buildCellPrompt(context: ProductionCellContext): string {
   ].join("\n");
 }
 
-function assertCliAvailable(command: string, backendName: string): void {
+interface CliCommand {
+  executable: string;
+  prefixArgs: string[];
+}
+
+function resolveCodexCommand(): CliCommand {
+  const configured = process.env.EXOTIC_CODEX_CLI;
+  const installedScript = process.env.APPDATA
+    ? path.join(process.env.APPDATA, "npm", "node_modules", "@openai", "codex", "bin", "codex.js")
+    : null;
+  const candidate = configured || (installedScript && fs.existsSync(installedScript) ? installedScript : null);
+  return candidate?.toLowerCase().endsWith(".js")
+    ? { executable: process.execPath, prefixArgs: [candidate] }
+    : { executable: candidate || "codex", prefixArgs: [] };
+}
+
+// Async (execFile), not sync (execFileSync): a dispatch is a single-threaded Node process
+// waiting on this, and a real agent invocation can run for minutes. execFileSync would
+// block the whole event loop for that entire duration - freezing every other bridge API
+// endpoint (health, pause, status) along with it. Confirmed empirically: a real ~26s codex
+// CLI invocation made the server completely unresponsive to any other request until it
+// returned, when this was still using execFileSync.
+const execFileAsync = promisify(execFile);
+
+async function runCli(
+  command: CliCommand,
+  args: readonly string[],
+  options: { cwd?: string; maxBuffer?: number },
+): Promise<string> {
+  const { stdout } = await execFileAsync(command.executable, [...command.prefixArgs, ...args], {
+    cwd: options.cwd,
+    encoding: "utf8",
+    maxBuffer: options.maxBuffer ?? 10 * 1024 * 1024,
+  });
+  return stdout;
+}
+
+async function assertCliAvailable(command: CliCommand, backendName: string): Promise<void> {
   try {
-    execFileSync(command, ["--version"], { stdio: "ignore" });
+    await runCli(command, ["--version"], {});
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `${backendName} backend requires the \`${command}\` CLI on PATH, but it could not be run (${message}). ` +
-        `Install it, or choose a different --backend.`,
+      `${backendName} backend requires its CLI, but it could not be run (${message}). ` +
+        `Install it, configure its executable, or choose a different --backend.`,
     );
   }
 }
@@ -51,15 +91,16 @@ export interface CliBackendOptions {
 // wasn't available to test against directly.
 export function claudeBackend(options: CliBackendOptions): ProductionWorker<string> {
   return async (context): Promise<ProductionReceipt<string>> => {
-    assertCliAvailable("claude", "claude");
+    const command = { executable: "claude", prefixArgs: [] };
+    await assertCliAvailable(command, "claude");
     const before = snapshotWorkingTree(options.cwd);
     const prompt = buildCellPrompt(context);
     let output: string;
     try {
-      output = execFileSync(
-        "claude",
+      output = await runCli(
+        command,
         ["-p", prompt, "--output-format", "json", ...(options.extraArgs ?? [])],
-        { cwd: options.cwd, encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
+        { cwd: options.cwd, maxBuffer: 10 * 1024 * 1024 },
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -75,15 +116,24 @@ export function claudeBackend(options: CliBackendOptions): ProductionWorker<stri
 // CLI is actually installed - it was not available to test against here.
 export function codexBackend(options: CliBackendOptions): ProductionWorker<string> {
   return async (context): Promise<ProductionReceipt<string>> => {
-    assertCliAvailable("codex", "codex");
+    const command = resolveCodexCommand();
+    await assertCliAvailable(command, "codex");
     const before = snapshotWorkingTree(options.cwd);
     const prompt = buildCellPrompt(context);
     let output: string;
     try {
-      output = execFileSync(
-        "codex",
-        ["exec", prompt, ...(options.extraArgs ?? [])],
-        { cwd: options.cwd, encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
+      output = await runCli(
+        command,
+        [
+          "exec",
+          "-c",
+          'service_tier="fast"',
+          "--sandbox",
+          "workspace-write",
+          ...(options.extraArgs ?? []),
+          prompt,
+        ],
+        { cwd: options.cwd, maxBuffer: 10 * 1024 * 1024 },
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
