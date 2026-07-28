@@ -8,7 +8,7 @@ export type { ExoticEvent, ExoticEventHandler, ExoticEventBus } from "@exotic/ev
 export const sdkIdentity = {
   name: "@exotic/sdk",
   tagline: "Everything Is Exotic.",
-  includes: ["@exotic/kernel", "@exotic/contracts", "@exotic/events"]
+  includes: ["@exotic/kernel", "@exotic/contracts", "@exotic/events", "@exotic/ai", "@exotic/object-model"]
 };
 
 export { defineModel, defineTool, defineAgent, identity as aiIdentity } from "@exotic/ai";
@@ -16,3 +16,34 @@ export type { ExoticModel, ExoticModelMessage, ExoticModelResponse, ExoticTool, 
 
 export { createKernelRuntime } from "@exotic/kernel";
 export type { ExoticKernelRuntime } from "@exotic/kernel";
+
+export {
+  createUniversalObject,
+  createInitialState,
+  scoreStateQuality,
+  createLiveMetadata,
+  hashObject,
+  EventBus as MetadataEventBus,
+  ProtectionGate,
+  UniversalMemoryGraph,
+  IndexManager,
+  LiveMetadataFabric,
+  attachCoreEngineLogging,
+  identity as objectModelIdentity
+} from "@exotic/object-model";
+export type {
+  ObjectType,
+  ObjectStatus,
+  MemoryLayer,
+  AccessLevel,
+  RetentionPolicy,
+  RelationshipType,
+  MetadataEventType,
+  EngineName,
+  UniversalObject,
+  UniversalState,
+  LiveMetadata,
+  MetadataEvent,
+  ProtectionDecision,
+  MemoryRelationship
+} from "@exotic/object-model";

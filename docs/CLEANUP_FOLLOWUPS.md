@@ -5,33 +5,40 @@ file's introduction). These are directories the audit flagged as ambiguous — p
 but not confidently enough to delete without someone who knows their history weighing in.
 None of these were touched by that pass.
 
-1. **`exotic-sdk-core/`** — a real, standalone TypeScript package (own `package.json`,
-   `tsconfig.json`, `src/`) that is *not* listed in root `package.json`'s
-   `workspaces` (`apps/*`, `packages/*`). Decide: fold it into `packages/sdk` (which already
-   exists and may overlap), or keep it standalone and add it to the workspace globs.
+## Resolved 2026-07-28
 
-2. **`exotic-frontend/`** — large (own `node_modules`), relationship to `exotic-studio/` and the
-   root Vite portal (`src/main.jsx`) is unclear. Needs someone with history on why it exists to
-   say whether it's live, superseded, or an abandoned experiment.
+1. ~~`exotic-sdk-core/`~~ — its Universal Object Model / State / Metadata Fabric / Memory Graph
+   content had no overlap with `packages/sdk` (which was just a re-export barrel), so it was
+   ported into a new `packages/object-model/` workspace package, wired up with proper
+   build/test scripts, and `packages/sdk` now re-exports it. The orphaned standalone copy was
+   deleted.
 
-3. **`MINGO-Studio/`** — an orphaned parallel monorepo scaffold with its own `packages/`
-   subdirectories whose names shadow the real `packages/*` (ai, core, sdk, ui, …). Not
-   referenced by any root config or script. Likely dead, but deleting a whole second monorepo
-   skeleton deserves an explicit go-ahead rather than an inference from "nothing points at it."
+2. ~~`exotic-frontend/`~~ — confirmed orphaned (no build/CI wiring, hardcoded fake data,
+   conceptually superseded by the root portal) and deleted.
 
-4. **`apps/studio` vs `exotic-studio/`** — a naming collision. `apps/studio` is a bare TS
-   scaffold in the real npm workspace; `exotic-studio/` is a full standalone Vite+React app with
-   its own `node_modules`/`dist`, not wired into the workspace at all. Pick one canonical
-   "studio" and rename or retire the other so the name stops being ambiguous.
+3. ~~`MINGO-Studio/`~~ — confirmed almost entirely empty directories, with the one populated
+   subfolder being an unmodified `create-vite` template. Deleted entirely.
 
-5. **Nested `Exotic/` git clone** — gitignored, ~220MB, contains its own `.git` with its own
-   commit history, a separate CMake C++ project (`Core/`, `Domains/`, `Engines/`, `Modules/`,
-   `EXOTIC-Native/`). This is effectively a second, undocumented codebase living inside this
-   working tree. Decide: is it meant to be a genuinely separate repository (in which case it
-   shouldn't sit inside this working tree at all — clone it elsewhere), or is it stale content
-   that should be deleted outright? Note `PORTAL/server.py`'s `configure`/`build`/`run` actions
-   (see `SOURCE=PROJECT/"Exotic"`) currently target this directory, so removing it without
-   updating that reference would break the portal's build/run buttons.
+4. ~~`apps/studio` vs `exotic-studio/`~~ — `apps/studio` was a 3-line `@exotic/core` smoke
+   check, not a real UI; `exotic-studio/` was the actual Studio workspace UI. Promoted
+   `exotic-studio`'s real files into `apps/studio` as `@exotic/studio` (dropping dead/empty
+   scaffold subdirectories that `App.jsx` never imported, and an unused template `index.css`
+   that conflicted with the real layout). The old smoke check's value was preserved as a real
+   test in `packages/core/tests/smoke.test.ts` instead of being lost.
+
+5. **Nested `Exotic/` git clone** — partially resolved. Turned out to have significant
+   uncommitted local work (modified/deleted files, several never-committed directories
+   including `EXOTIC-Native/` itself), and there's *already* a separate clean clone of the same
+   GitHub remote (`mingovoid-boop/Exotic`) at `C:\Projects\Exotic-GitHub`. Relocating it as
+   originally planned would have created a third divergent copy without resolving the real
+   issue (uncommitted work with no safe home) — decided to leave it in place for now rather than
+   guess. What *was* fixed: `PORTAL/server.py`'s `SOURCE` path was pointed at the wrong CMake
+   project (the top-level `Exotic/CMakeLists.txt` only builds an unrelated `ExoticBuilder`
+   scaffolding tool, not the native GUI shell) — `SOURCE` now points directly at
+   `Exotic/EXOTIC-Native/`, whose own `CMakeLists.txt` builds the actual `EXOTIC.exe` GUI target,
+   so the portal's build/run buttons now target the right thing. Still open: reconcile the
+   uncommitted work in the nested copy against `Exotic-GitHub` and decide on one canonical
+   external location.
 
 ## Also noted, not yet acted on
 

@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 ROOT=Path(__file__).resolve().parent
 WEB=ROOT/"web"; DATA=ROOT/"data"; DATA.mkdir(exist_ok=True)
 CFG=DATA/"config.json"; LOG=DATA/"portal.log"
-PROJECT=Path(r"C:\Projects\Exotic"); SOURCE=PROJECT/"Exotic"; BUILD=PROJECT/"out"/"build"
+PROJECT=Path(r"C:\Projects\Exotic"); SOURCE=PROJECT/"Exotic"/"EXOTIC-Native"; BUILD=PROJECT/"out"/"build"
 if CFG.exists(): cfg=json.loads(CFG.read_text())
 else:
     cfg={"token":secrets.token_urlsafe(18),"port":8765}

@@ -1,0 +1,15 @@
+{
+  "name": "@exotic/object-model",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Universal Object Model, Universal State Model, Live Metadata Fabric, and Universal Memory Graph.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "nanoid": "^3.3.16"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}
