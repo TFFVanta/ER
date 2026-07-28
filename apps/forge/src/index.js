@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import cp from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { createObjectiveStore } from './objectives.js';
 
 const args = process.argv.slice(2);
@@ -665,6 +666,160 @@ function selectorCommand(argv) {
   objectiveHelp();
 }
 
+function bridgeRoot() {
+  return process.env.EXOTIC_BRIDGE_ROOT || path.join(root, '.exotic', 'codex-bridge');
+}
+
+function readRoadmapFile() {
+  const file = path.join(bridgeRoot(), 'roadmap.json');
+  if (!fs.existsSync(file)) return [];
+  return readJson(file);
+}
+
+// Loads a built workspace package straight from its dist output via an absolute file:
+// URL, matching the same pattern codex-bridge-runtime.mjs uses (see that file's imports).
+// A bare `import '@exotic/workflow'` would resolve to that package's "main": "src/index.ts",
+// which plain Node ESM can't load directly - only tools like tsx/vitest transpile on the fly.
+async function loadWorkspacePackage(name) {
+  const distEntry = path.join(root, 'packages', name, 'dist', 'index.js');
+  if (!fs.existsSync(distEntry)) {
+    console.error(`packages/${name} has not been built. Run "npm run build" first.`);
+    process.exit(1);
+  }
+  return import(pathToFileURL(distEntry).href);
+}
+
+function workerHelp() {
+  console.log([
+    'Worker Commands:',
+    '  worker list',
+    '  worker run <step-id> [--backend claude|codex|local]',
+    ''
+  ].join(nl));
+}
+
+// Roadmap steps map to venture-workspace tasks by studio lane - see
+// exotic-operations-console-v1.0/scripts/codex-bridge-runtime.mjs's recordRoadmapEvidence(),
+// which this mirrors so a step completed via this CLI and one completed via the bridge's
+// HTTP API produce the same evidence-record shape.
+function matchingTaskId(workspace, step) {
+  const lane = String(step.lane || '').toUpperCase();
+  const task = (workspace.tasks || []).find((item) => item.taskId.endsWith(`-TASK-${lane}`));
+  return task ? task.taskId : null;
+}
+
+async function recordWorkerCompletion(step, evidence) {
+  const port = process.env.EXOTIC_BRIDGE_PORT || 8787;
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/v1/bridge/roadmap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: step.id, status: 'completed', progress: 100, evidence })
+    });
+    if (response.ok) return 'bridge-api';
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || `bridge API returned ${response.status}`);
+  } catch (error) {
+    // Bridge server isn't running (or rejected the update) - fall back to writing the
+    // same two files it would have written, so this works standalone too.
+    const roadmapFile = path.join(bridgeRoot(), 'roadmap.json');
+    const roadmap = readRoadmapFile();
+    if (!roadmap.length) throw new Error(`No roadmap found and bridge API unavailable: ${error.message}`);
+    const nextRoadmap = roadmap.map((item) =>
+      item.id === step.id ? { ...item, status: 'completed', progress: 100 } : item
+    );
+    fs.writeFileSync(roadmapFile, JSON.stringify(nextRoadmap, null, 2));
+
+    const workspaceFile = path.join(bridgeRoot(), 'venture-workspace.json');
+    if (fs.existsSync(workspaceFile)) {
+      const { appendEvidenceRecord } = await loadWorkspacePackage('entity');
+      const workspace = readJson(workspaceFile);
+      const taskId = matchingTaskId(workspace, step);
+      const next = appendEvidenceRecord(workspace, {
+        relatedEntityType: taskId ? 'task' : 'venture',
+        relatedEntityId: taskId || workspace.venture.ventureId,
+        evidenceType: 'runtime-log',
+        source: `${step.id} ${step.title}: ${evidence.join('; ')}`
+      });
+      fs.writeFileSync(workspaceFile, JSON.stringify(next, null, 2));
+    }
+    return 'file-fallback';
+  }
+}
+
+async function workerCommand(argv) {
+  const subcommand = argv[1];
+  const { values } = parseFlags(argv.slice(2));
+
+  if (subcommand === 'list') {
+    const roadmap = readRoadmapFile();
+    if (!roadmap.length) {
+      console.log('No roadmap found at .exotic/codex-bridge/roadmap.json.');
+      return;
+    }
+    const { planProductionFabric } = await loadWorkspacePackage('workflow');
+    const plan = planProductionFabric({
+      title: 'EXOTIC roadmap',
+      jobs: roadmap.map((item) => ({
+        id: item.id,
+        title: item.title,
+        lane: item.lane || 'roadmap',
+        dependsOn: item.dependsOn || []
+      }))
+    });
+    const byId = new Map(roadmap.map((item) => [item.id, item]));
+    for (const layer of plan.layers) {
+      for (const swarm of layer.swarms) {
+        for (const cell of swarm.cells) {
+          const step = byId.get(cell.jobId);
+          console.log(`${cell.jobId}  ${step?.status ?? 'unknown'}  ${step?.progress ?? 0}%  ${step?.title ?? ''}`);
+        }
+      }
+    }
+    if (plan.blocked.length) {
+      console.log('');
+      console.log('Blocked:');
+      for (const item of plan.blocked) {
+        console.log(`  ${item.jobId}  ${item.reason}  waiting on: ${item.waitingOn.join(', ')}`);
+      }
+    }
+    return;
+  }
+
+  if (subcommand === 'run') {
+    const stepId = argv[2];
+    if (!stepId) {
+      console.error('Missing step id. Usage: exo worker run <step-id> [--backend claude|codex|local]');
+      process.exit(1);
+    }
+    const roadmap = readRoadmapFile();
+    const step = roadmap.find((item) => item.id === stepId);
+    if (!step) {
+      console.error(`Unknown roadmap step: ${stepId}`);
+      process.exit(1);
+    }
+    const backend = values.backend || process.env.EXOTIC_WORKER_BACKEND || 'claude';
+    const { dispatchStep } = await loadWorkspacePackage('codex-worker');
+    console.log(`Dispatching ${step.id} (${step.title}) to backend "${backend}"...`);
+    const result = await dispatchStep(
+      { id: step.id, title: step.title, lane: step.lane, dependsOn: step.dependsOn },
+      { backend, cwd: root }
+    );
+    if (result.status === 'failed') {
+      console.error(`Dispatch failed: ${result.error}`);
+      process.exit(1);
+    }
+    console.log('Evidence:');
+    for (const line of result.receipt.evidence) console.log(`  - ${line}`);
+    const via = await recordWorkerCompletion(step, result.receipt.evidence);
+    console.log('');
+    console.log(`Step ${step.id} marked completed (recorded via ${via}).`);
+    return;
+  }
+
+  workerHelp();
+}
+
 function help() {
   console.log([
     'EXOTIC',
@@ -696,6 +851,8 @@ function help() {
     '  selector admit-proposal <selector-id>',
     '  selector execute-proposal <selector-id>',
     '  selector learn-execution <selector-id>',
+    '  worker list',
+    '  worker run <step-id> [--backend claude|codex|local]',
     '  new package <name>',
     '  build',
     '  help',
@@ -719,6 +876,11 @@ if (args[0] === 'doctor') {
   lessonCommand(args);
 } else if (args[0] === 'selector') {
   selectorCommand(args);
+} else if (args[0] === 'worker') {
+  workerCommand(args).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
 } else if (args[0] === 'new' && args[1] === 'package') {
   createPackage(args[2]);
 } else if (args[0] === 'build') {

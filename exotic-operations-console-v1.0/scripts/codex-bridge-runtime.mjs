@@ -5,11 +5,18 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
+  appendEvidenceRecord,
   createVentureWorkspace,
   slugify,
   summarizeWorkspace,
 } from "../../packages/entity/dist/index.js";
 import { ventureWorkspaceContract } from "../../packages/contracts/dist/index.js";
+import { dispatchStep } from "../../packages/codex-worker/dist/index.js";
+
+// Which backend the auto-tick loop dispatches ready steps to. "claude"/"codex" require the
+// matching CLI on PATH; "local" requires EXOTIC_LOCAL_MODEL_ENDPOINT. See
+// packages/codex-worker/src/backends.ts.
+const workerBackendName = process.env.EXOTIC_WORKER_BACKEND || "claude";
 
 const consoleRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -170,10 +177,14 @@ function ensureBridgeFiles() {
             "Stabilize the repo, define the canonical venture model, and connect the studios through one shared workspace system.",
           initialRequest: "build this business",
           updatedAt: new Date().toISOString(),
-          lastCodexUpdate: "Bridge initialized.",
+          lastCodexUpdate: "Bridge initialized. Auto mode is paused - resume it once a worker backend is ready.",
           blockers: [],
           status: "running",
-          autoMode: "running",
+          // Defaults to paused: the auto-tick loop now dispatches real work to a worker
+          // backend (see workerBackendName below) instead of just writing an inert prompt,
+          // so this is an explicit operator opt-in rather than an inherited "safe by
+          // accident" default.
+          autoMode: "paused",
         },
         null,
         2,
@@ -2525,33 +2536,87 @@ function appendOperatorNote(payload) {
   };
 }
 
+// Extracts a non-empty evidence list from a payload, or null if none was supplied.
+// Mirrors packages/workflow's own receiptEvidence() check so "no evidence" is treated
+// the same way everywhere in the system: a plausible-looking but empty array is rejected,
+// not silently accepted.
+function payloadEvidence(payload) {
+  if (!Array.isArray(payload.evidence)) return null;
+  const evidence = payload.evidence.filter(
+    (item) => typeof item === "string" && item.trim(),
+  );
+  return evidence.length ? evidence : null;
+}
+
+// Roadmap steps map to venture-workspace tasks by studio lane (task ids follow
+// `${ventureId}-TASK-${studio.toUpperCase()}`, see packages/entity's createVentureWorkspace).
+// Foundation-tier steps (P1-01..P1-04) have no matching studio task, so their evidence
+// attaches to the venture itself instead - still a real, existing entity the contract
+// can validate against.
+function recordRoadmapEvidence(workspace, step, evidence) {
+  const ventureId = workspace.venture.ventureId;
+  const matchingTask = (workspace.tasks || []).find((task) =>
+    task.taskId.endsWith(`-TASK-${String(step.lane || "").toUpperCase()}`),
+  );
+  const next = appendEvidenceRecord(workspace, {
+    relatedEntityType: matchingTask ? "task" : "venture",
+    relatedEntityId: matchingTask ? matchingTask.taskId : ventureId,
+    evidenceType: "runtime-log",
+    source: `${step.id} ${step.title}: ${evidence.join("; ")}`,
+  });
+  return writeWorkspace(next);
+}
+
 function updateRoadmapItem(payload) {
   ensureBridgeFiles();
   const roadmap = readRoadmap();
-  const nextRoadmap = roadmap.map((item) => {
-    if (item.id !== payload.id) return item;
-    const nextStatus = payload.status || item.status;
-    const nextProgress =
-      typeof payload.progress === "number"
-        ? Math.max(0, Math.min(100, payload.progress))
-        : nextStatus === "completed"
-          ? 100
-          : nextStatus === "running" && Number(item.progress || 0) === 0
-            ? 25
-            : Number(item.progress || 0);
-    return {
-      ...item,
-      status: nextStatus,
-      progress: nextProgress,
-    };
-  });
+  const current = roadmap.find((item) => item.id === payload.id);
+  if (!current) throw new Error(`Unknown roadmap step: ${payload.id}`);
+
+  const nextStatus = payload.status || current.status;
+  const nextProgress =
+    typeof payload.progress === "number"
+      ? Math.max(0, Math.min(100, payload.progress))
+      : nextStatus === "completed"
+        ? 100
+        : nextStatus === "running" && Number(current.progress || 0) === 0
+          ? 25
+          : Number(current.progress || 0);
+
+  // Auto-mode ticks cannot increase completion percentages, and completion always
+  // requires evidence - see docs/AUTO_MODE_MASTER_PLAN.md and docs/SYSTEM_OVERHAUL_V2.md.
+  // Applied uniformly to every caller (console UI, worker adapter, direct API use): a
+  // human marking something done manually still has to say what proves it.
+  const evidence = payloadEvidence(payload);
+  const requiresEvidence =
+    nextStatus === "completed" || nextProgress > Number(current.progress || 0);
+  if (requiresEvidence && !evidence) {
+    throw new Error(
+      `Roadmap step ${payload.id} cannot ${nextStatus === "completed" ? "be marked completed" : "advance progress"} ` +
+        `without evidence. Include a non-empty "evidence" array describing what was verified.`,
+    );
+  }
+
+  const nextRoadmap = roadmap.map((item) =>
+    item.id === payload.id
+      ? { ...item, status: nextStatus, progress: nextProgress }
+      : item,
+  );
   writeRoadmap(nextRoadmap);
   const updated = nextRoadmap.find((item) => item.id === payload.id);
-  if (!updated) throw new Error(`Unknown roadmap step: ${payload.id}`);
+
+  if (evidence) {
+    recordRoadmapEvidence(ensureWorkspaceFile(), updated, evidence);
+  }
+
   const state = writeBridgeState({
     lastCodexUpdate: `Roadmap step ${updated.id} set to ${updated.status} from operations console.`,
   });
-  if (state.autoMode !== "paused") autoAdvanceRoadmap();
+  if (state.autoMode !== "paused") {
+    autoAdvanceRoadmap().catch((error) => {
+      console.error("autoAdvanceRoadmap failed:", error instanceof Error ? error.message : error);
+    });
+  }
   return updated;
 }
 
@@ -2567,7 +2632,13 @@ function setAutoMode(mode) {
   });
 }
 
-function autoAdvanceRoadmap() {
+// Guards against overlapping dispatches: a worker invocation can take a while (it waits
+// for a real CLI/model call), and can run longer than autoTickMs. Without this, a slow
+// dispatch plus the next scheduled tick could spawn a second worker for the same step.
+let dispatchInFlight = false;
+
+async function autoAdvanceRoadmap() {
+  if (dispatchInFlight) return;
   ensureBridgeFiles();
   const state = readBridgeState();
   if (state.autoMode === "paused") return;
@@ -2624,6 +2695,46 @@ function autoAdvanceRoadmap() {
   });
   syncWorkspaceState({ state: refreshedState, roadmap: nextRoadmap });
   appendExecutionEvidence(nextRoadmap, refreshedState, activeStep);
+
+  await dispatchActiveStep(activeStep);
+}
+
+// Actually dispatches the active step to a real worker backend and records the outcome -
+// this is the piece that was missing before: autoAdvanceRoadmap used to write an
+// executionIntent prompt and then stop, so nothing ever advanced past 0%.
+async function dispatchActiveStep(step) {
+  dispatchInFlight = true;
+  try {
+    const result = await dispatchStep(
+      { id: step.id, title: step.title, lane: step.lane, dependsOn: step.dependsOn },
+      { backend: workerBackendName, cwd: repoRoot },
+    );
+    if (result.status === "completed") {
+      updateRoadmapItem({
+        id: step.id,
+        status: "completed",
+        progress: 100,
+        evidence: result.receipt.evidence,
+      });
+    } else {
+      const state = readBridgeState();
+      const blockers = Array.isArray(state.blockers) ? state.blockers : [];
+      writeBridgeState({
+        blockers: [
+          ...blockers.filter((blocker) => blocker.stepId !== step.id),
+          { stepId: step.id, reason: result.error, recordedAt: new Date().toISOString() },
+        ],
+        lastCodexUpdate: `Worker dispatch for ${step.id} (${workerBackendName}) did not produce evidence: ${result.error}`,
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    writeBridgeState({
+      lastCodexUpdate: `Worker dispatch for ${step.id} (${workerBackendName}) crashed: ${message}`,
+    });
+  } finally {
+    dispatchInFlight = false;
+  }
 }
 
 const server = http.createServer((req, res) => {
@@ -2721,7 +2832,8 @@ const server = http.createServer((req, res) => {
           item,
         });
       } catch (error) {
-        return json(res, 404, { ok: false, message: error.message });
+        const status = /^Unknown roadmap step/.test(error.message) ? 404 : 400;
+        return json(res, status, { ok: false, message: error.message });
       }
     });
     return;
@@ -2753,7 +2865,11 @@ const server = http.createServer((req, res) => {
 });
 
 ensureBridgeFiles();
-setInterval(autoAdvanceRoadmap, autoTickMs);
+setInterval(() => {
+  autoAdvanceRoadmap().catch((error) => {
+    console.error("autoAdvanceRoadmap failed:", error instanceof Error ? error.message : error);
+  });
+}, autoTickMs);
 server.listen(port, host, () => {
   console.log(`EXOTIC Codex bridge runtime: http://${host}:${port}`);
   console.log(`Bridge root: ${bridgeRoot}`);

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { ventureWorkspaceContract } from "@exotic/contracts";
 import { requiredGeneratedWorkspaceArtifacts } from "@exotic/types";
 import { createWorkspaceProductionFabric } from "@exotic/workflow";
-import { createVentureWorkspace, summarizeWorkspace } from "../src/index.js";
+import { appendEvidenceRecord, createVentureWorkspace, summarizeWorkspace } from "../src/index.js";
 
 function workspaceIds(
   workspace: ReturnType<typeof createVentureWorkspace>,
@@ -121,5 +121,45 @@ describe("entity package smoke", () => {
       maximumParallelJobs: 4,
     });
     expect(plan.jobs.every((job) => job.metadata?.artifactIds)).toBe(true);
+  });
+
+  it("appends a verified evidence record for a real task and re-validates the workspace", () => {
+    const workspace = createVentureWorkspace({
+      request: "build this business",
+      operator: "wakez",
+      now: "2026-07-26T00:00:00.000Z",
+    });
+    const task = workspace.tasks[0];
+
+    const next = appendEvidenceRecord(workspace, {
+      relatedEntityType: "task",
+      relatedEntityId: task.taskId,
+      evidenceType: "runtime-log",
+      source: "worker dispatch produced 1 changed file",
+      now: "2026-07-26T01:00:00.000Z",
+    });
+
+    expect(next.evidenceRecords.length).toBe(workspace.evidenceRecords.length + 1);
+    const added = next.evidenceRecords[next.evidenceRecords.length - 1];
+    expect(added.relatedEntityId).toBe(task.taskId);
+    expect(added.verdict).toBe("verified");
+    expect(() => ventureWorkspaceContract.parse(next)).not.toThrow();
+  });
+
+  it("rejects an evidence record pointing at a nonexistent entity", () => {
+    const workspace = createVentureWorkspace({
+      request: "build this business",
+      operator: "wakez",
+      now: "2026-07-26T00:00:00.000Z",
+    });
+
+    expect(() =>
+      appendEvidenceRecord(workspace, {
+        relatedEntityType: "task",
+        relatedEntityId: "TASK-DOES-NOT-EXIST",
+        evidenceType: "runtime-log",
+        source: "should fail",
+      }),
+    ).toThrow();
   });
 });

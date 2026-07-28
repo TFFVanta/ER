@@ -98,7 +98,22 @@ try {
   const paused = await request(baseUrl, '/bridge/auto-mode', { mode: 'paused' });
   assert.equal(paused.state.autoMode, 'paused');
 
-  const roadmap = await request(baseUrl, '/bridge/roadmap', { id: 'P1-01', status: 'running', progress: 70 });
+  // Progress increases require evidence - see codex-bridge-runtime.mjs's updateRoadmapItem().
+  // Confirm the rejection path first, then confirm it succeeds once evidence is supplied.
+  const rejected = await fetch(`${baseUrl}/bridge/roadmap`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: 'P1-01', status: 'running', progress: 70 })
+  });
+  assert.equal(rejected.ok, false, 'Progress increase without evidence should be rejected.');
+  assert.equal(rejected.status, 400);
+
+  const roadmap = await request(baseUrl, '/bridge/roadmap', {
+    id: 'P1-01',
+    status: 'running',
+    progress: 70,
+    evidence: ['contract-test verified P1-01 advanced to 70%']
+  });
   assert.equal(roadmap.item.progress, 70);
 
   const resumed = await request(baseUrl, '/bridge/auto-mode', { mode: 'running' });
@@ -114,7 +129,8 @@ try {
     const completed = await request(baseUrl, '/bridge/roadmap', {
       id: stepId,
       status: 'completed',
-      progress: 100
+      progress: 100,
+      evidence: [`contract-test verified ${stepId} completion`]
     });
     assert.equal(completed.item.status, 'completed');
   }

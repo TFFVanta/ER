@@ -1,0 +1,15 @@
+{
+  "name": "@exotic/codex-worker",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Dispatches roadmap production-fabric cells to a real worker backend (Claude CLI, Codex CLI, or a local OpenAI-compatible model endpoint) and captures evidence-backed receipts.",
+  "dependencies": {
+    "@exotic/workflow": "0.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

@@ -581,6 +581,69 @@ export function createVentureWorkspace(
   return ventureWorkspaceContract.parse(workspace);
 }
 
+export interface AppendEvidenceRecordInput {
+  relatedEntityType: EvidenceRecord["relatedEntityType"];
+  relatedEntityId: string;
+  evidenceType: EvidenceRecord["evidenceType"];
+  source: string;
+  verdict?: EvidenceRecord["verdict"];
+  now?: string;
+}
+
+// Appends a real evidence record to a workspace and re-validates it against
+// ventureWorkspaceContract, rather than callers hand-mutating evidenceRecords directly.
+// A "verified" record here is what unblocks a lifecycle entity's status: "completed" -
+// see ventureWorkspaceContract's verifiedEvidenceTargets check - so this is the one place
+// that should ever mark evidence verified.
+export function appendEvidenceRecord(
+  workspace: VentureWorkspace,
+  input: AppendEvidenceRecordInput,
+): VentureWorkspace {
+  const now = isoNow(input.now);
+  const ventureId = workspace.venture.ventureId;
+  // slugify() (used inside scopedId) truncates its input to 48 characters - embedding the
+  // full relatedEntityId (often the ventureId itself, already close to that limit) here
+  // would silently clip off whatever comes after it, including any uniqueness suffix.
+  // Keep the slug input short: entity type + a sequence number + a short hash.
+  const sequence = workspace.evidenceRecords.length + 1;
+  const evidenceId = scopedId(
+    ventureId,
+    "EVID",
+    `${input.relatedEntityType}-${sequence}-${shortHash(`${input.relatedEntityId}|${now}|${input.source}`)}`,
+  );
+
+  const record: EvidenceRecord = {
+    evidenceId,
+    ventureId,
+    relatedEntityType: input.relatedEntityType,
+    relatedEntityId: input.relatedEntityId,
+    evidenceType: input.evidenceType,
+    source: input.source,
+    capturedAt: now,
+    verdict: input.verdict ?? "verified",
+  };
+
+  const next: VentureWorkspace = {
+    ...workspace,
+    evidenceRecords: [...workspace.evidenceRecords, record],
+    graphEdges: [
+      ...workspace.graphEdges,
+      {
+        edgeId: scopedId(ventureId, "EDGE", `evid-${sequence}-${shortHash(evidenceId)}`),
+        ventureId,
+        fromEntityType: "evidence-record",
+        fromEntityId: evidenceId,
+        relation: "verifies",
+        toEntityType: input.relatedEntityType,
+        toEntityId: input.relatedEntityId,
+        createdAt: now,
+      },
+    ],
+  };
+
+  return ventureWorkspaceContract.parse(next);
+}
+
 export function summarizeWorkspace(workspace: VentureWorkspace): string {
   return [
     `${workspace.venture.name} (${workspace.venture.type})`,
