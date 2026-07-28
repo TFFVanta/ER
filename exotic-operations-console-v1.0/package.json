@@ -17,8 +17,8 @@
     "codex:live": "node scripts/codex-bridge-runtime.mjs"
   },
   "dependencies": {
-    "electron": "latest",
-    "electron-builder": "latest"
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "center.mingo.exotic.operations",

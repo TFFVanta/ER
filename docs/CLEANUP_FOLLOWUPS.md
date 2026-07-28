@@ -35,9 +35,11 @@ None of these were touched by that pass.
 
 ## Also noted, not yet acted on
 
-- `npm audit` reports 2 high-severity vulnerabilities in the dependency tree as of this pass.
-  Not remediated here (out of scope for the security/hygiene fixes this file accompanies) — run
-  `npm audit` and triage separately.
+- ~~`npm audit` reports 2 high-severity vulnerabilities~~ — fixed via `npm audit fix`
+  (`brace-expansion` DoS, `postcss` sourcemap path traversal); 0 vulnerabilities as of this note.
+  Also pinned `exotic-operations-console-v1.0`'s `electron`/`electron-builder` deps off `latest`
+  to specific versions, since an unpinned major-version dependency with no lockfile in that
+  package made its builds non-reproducible.
 - Git history still contains the portal auth token that was rotated out of the working tree in
   this pass (`PORTAL/data/config.json`, now gitignored). Rotating was judged sufficient for a
   private repo; a history rewrite (`git filter-repo` + force-push) would be needed to fully
