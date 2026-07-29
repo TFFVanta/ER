@@ -788,7 +788,7 @@ async function harmonyCommand(argv) {
 function companyHelp() {
   console.log([
     'Company Commands:',
-    '  company status',
+    '  company status [--json]',
     ''
   ].join(nl));
 }
@@ -799,13 +799,17 @@ async function companyCommand(argv) {
     companyHelp();
     return;
   }
+  const { values } = parseFlags(argv.slice(2));
 
-  const { summarizeVenture, auditBrand, readLedger, readRepoHealth } = await loadWorkspacePackage('company-engine');
+  const { gatherCompanyStatus } = await loadWorkspacePackage('company-engine');
+  const status = gatherCompanyStatus(root);
 
-  const ventures = [
-    summarizeVenture({ name: 'EXOTIC', bridgeRoot: bridgeRoot() }),
-    summarizeVenture({ name: 'Exotic Remedy', bridgeRoot: path.join(root, '.exotic', 'exotic-remedy-bridge') }),
-  ];
+  if (values.json) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+
+  const { ventures, brandFindings, finance, repoHealth: health } = status;
 
   console.log('=== Ops ===');
   for (const venture of ventures) {
@@ -822,20 +826,14 @@ async function companyCommand(argv) {
 
   console.log('');
   console.log('=== Brand audit ===');
-  const findings = auditBrand({
-    exoticUiStylesPath: path.join(root, 'packages', 'ui', 'src', 'styles.css'),
-    remedyUiStylesPath: path.join(root, 'packages', 'ui-remedy', 'src', 'styles.css'),
-  });
-  for (const finding of findings) {
+  for (const finding of brandFindings) {
     console.log(`[${finding.level.toUpperCase()}] ${finding.brand}: ${finding.message}`);
   }
 
   console.log('');
   console.log('=== Finance ===');
-  const ledgerPath = path.join(root, '.exotic', 'company', 'ledger.json');
-  const finance = readLedger(ledgerPath);
   if (!finance.hasData) {
-    console.log(`No ledger data (${ledgerPath} not found or empty). No revenue/cost source is wired up yet - add entries manually or integrate a real source.`);
+    console.log('No ledger data yet. No revenue/cost source is wired up yet - add entries manually or integrate a real source.');
   } else {
     console.log(`Revenue: ${finance.totalRevenue} | Cost: ${finance.totalCost} | Net: ${finance.net} (${finance.entryCount} entries)`);
     for (const [venture, totals] of Object.entries(finance.byVenture)) {
@@ -845,10 +843,6 @@ async function companyCommand(argv) {
 
   console.log('');
   console.log('=== Repo health ===');
-  const health = readRepoHealth({
-    repoRoot: root,
-    verificationJsonPath: path.join(bridgeRoot(), 'verification.json'),
-  });
   console.log(`Branch: ${health.branch ?? 'unknown'} | Uncommitted files: ${health.uncommittedFiles}`);
   if (!health.lastVerification.hasData) {
     console.log('No verification.json found yet - run "npm run verify" to generate one.');

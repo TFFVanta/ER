@@ -16,7 +16,8 @@
     "portal:preview": "vite preview",
     "portal:test": "vitest run src/portalConfig.test.js",
     "portal:verify": "npm run portal:test && npm run portal:build",
-    "portal:health": "node tooling/check-frontend-health.mjs"
+    "portal:health": "node tooling/check-frontend-health.mjs",
+    "company:status:page": "node tooling/render-company-status-page.mjs"
   },
   "keywords": [],
   "author": "",

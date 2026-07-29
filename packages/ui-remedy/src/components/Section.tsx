@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import type { PropsWithoutTitle } from "../prop-types.js";
 
-export interface SectionProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+export interface SectionProps extends PropsWithoutTitle<HTMLAttributes<HTMLElement>> {
   eyebrow?: ReactNode;
   title?: ReactNode;
   description?: ReactNode;

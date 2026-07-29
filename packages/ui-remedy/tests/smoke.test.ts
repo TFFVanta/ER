@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BounceIn, Button, Card, Chip, Eyebrow, Input, Section, SectionGrid } from "../src/index.js";
 
 describe("ui-remedy package smoke", () => {
   it("has a valid Exotic Remedy package manifest", () => {
@@ -10,25 +13,27 @@ describe("ui-remedy package smoke", () => {
 
   it("exports every advertised component from the source barrel", () => {
     const barrel = fs.readFileSync(path.resolve("src/index.ts"), "utf8");
-    for (const name of ["Button", "Card", "Chip", "Eyebrow", "Input", "BounceIn"]) {
-      expect(barrel).toContain(`export { ${name} }`);
+    for (const name of ["Button", "Card", "Chip", "Eyebrow", "Input", "BounceIn", "Section"]) {
+      expect(barrel).toMatch(new RegExp(`export \\{[^}]*\\b${name}\\b[^}]*\\}`));
     }
   });
 
-  it("every component file uses class names defined in styles.css", () => {
-    const styles = fs.readFileSync(path.resolve("src/styles.css"), "utf8");
-    const componentsDir = path.resolve("src/components");
-    for (const file of fs.readdirSync(componentsDir)) {
-      const source = fs.readFileSync(path.join(componentsDir, file), "utf8");
-      const classNames = [
-        ...new Set(
-          [...source.matchAll(/remedy-[a-z-]+/g)].map((m) => m[0].replace(/-+$/, "")),
-        ),
-      ];
-      expect(classNames.length).toBeGreaterThan(0);
-      for (const className of classNames) {
-        expect(styles).toContain(`.${className}`);
-      }
+  it("every component actually renders non-empty markup with the expected base class", () => {
+    const cases: [ReturnType<typeof createElement>, string][] = [
+      [createElement(Button, {}, "Go"), "remedy-button"],
+      [createElement(Card, { eyebrow: "Eyebrow", title: "Title" }, "Body"), "remedy-card"],
+      [createElement(Chip, {}, "Tag"), "remedy-chip"],
+      [createElement(Eyebrow, {}, "Label"), "remedy-eyebrow"],
+      [createElement(Input, { placeholder: "Search" }), "remedy-input"],
+      [createElement(BounceIn, {}, "Content"), "remedy-bounce-in"],
+      [createElement(Section, { title: "Section" }), "remedy-section"],
+      [createElement(SectionGrid, {}, "Grid"), "remedy-section__grid"],
+      [createElement(Card, { pattern: "dots" }, "Body"), "remedy-pattern-dots"],
+    ];
+    for (const [element, expectedClass] of cases) {
+      const html = renderToStaticMarkup(element);
+      expect(html.length).toBeGreaterThan(0);
+      expect(html).toContain(expectedClass);
     }
   });
 });

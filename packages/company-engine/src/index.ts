@@ -6,6 +6,10 @@ export { readLedger } from "./finance.js";
 export type { FinanceSummary, LedgerEntry } from "./finance.js";
 export { readRepoHealth } from "./repo-health.js";
 export type { RepoHealth } from "./repo-health.js";
+export { ventureRegistry } from "./ventures.js";
+export type { VentureRegistryEntry } from "./ventures.js";
+export { gatherCompanyStatus } from "./status.js";
+export type { CompanyStatus } from "./status.js";
 
 export const identity = {
   name: "@exotic/company-engine",

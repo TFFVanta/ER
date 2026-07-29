@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import type { PropsWithoutTitle } from "../prop-types.js";
 
-export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
+export interface CardProps extends PropsWithoutTitle<HTMLAttributes<HTMLDivElement>> {
   eyebrow?: ReactNode;
   title?: ReactNode;
   children?: ReactNode;
