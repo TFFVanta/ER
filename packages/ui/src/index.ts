@@ -1,37 +1,14 @@
-export interface ExoticTheme {
-  name: string;
-  background: string;
-  foreground: string;
-  border: string;
-  sharp: boolean;
-  staticTexture: boolean;
-  enchanted: boolean;
-}
+import "./styles.css";
 
-export interface ExoticButton {
-  id: string;
-  label: string;
-  icon: string;
-}
+export { Button } from "./components/Button.js";
+export type { ButtonProps, ButtonVariant } from "./components/Button.js";
+export { Card } from "./components/Card.js";
+export type { CardProps } from "./components/Card.js";
+export { Chip } from "./components/Chip.js";
+export type { ChipProps } from "./components/Chip.js";
+export { Eyebrow } from "./components/Eyebrow.js";
+export type { EyebrowProps } from "./components/Eyebrow.js";
+export { Input } from "./components/Input.js";
+export type { InputProps } from "./components/Input.js";
 
-export const ExoticUI = {
-  theme: {
-    name: "black-white-static-enchanted",
-    background: "#000000",
-    foreground: "#ffffff",
-    border: "#ffffff",
-    sharp: true,
-    staticTexture: true,
-    enchanted: true
-  } satisfies ExoticTheme,
-
-  buttons: [
-    { id: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
-    { id: "optimizer", label: "Optimizer", icon: "gauge" },
-    { id: "observer", label: "Observer", icon: "activity" },
-    { id: "mesh", label: "Mesh", icon: "network" },
-    { id: "device", label: "Device", icon: "monitor" },
-    { id: "network", label: "Network", icon: "wifi" },
-    { id: "settings", label: "Settings", icon: "settings" }
-  ] satisfies ExoticButton[]
-};
+export const identity = { name: "@exotic/ui", tagline: "Everything Is Exotic." };

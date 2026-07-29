@@ -1,0 +1,126 @@
+/* EXOTIC design tokens - mirrors brand/tokens.json and brand/web/exotic.css.
+   Keep in sync by hand; brand/ is the source of truth for values. */
+:root {
+  --exotic-bg: #0b0b0b;
+  --exotic-surface: #111111;
+  --exotic-surface-2: #171717;
+  --exotic-surface-3: #1d1d1d;
+  --exotic-line: #2c2c2c;
+  --exotic-line-strong: #444444;
+  --exotic-ink: #ffffff;
+  --exotic-muted: #a9a9a9;
+  --exotic-paper: #ffffff;
+  --exotic-focus: #dadada;
+  --exotic-active: #ffffff;
+  --exotic-radius: 10px;
+  --exotic-radius-tight: 6px;
+  --exotic-border: 1px solid var(--exotic-line);
+  --exotic-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  --exotic-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.exotic-card,
+.exotic-button,
+.exotic-input,
+.exotic-chip,
+.exotic-eyebrow {
+  font-family: var(--exotic-font);
+}
+
+.exotic-card {
+  border: var(--exotic-border);
+  border-radius: var(--exotic-radius);
+  box-shadow: var(--exotic-shadow);
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0)), var(--exotic-surface);
+  color: var(--exotic-ink);
+}
+
+.exotic-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--exotic-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.exotic-chip {
+  display: inline-block;
+  margin: 0 8px 8px 0;
+  padding: 9px 12px;
+  border: 1px solid var(--exotic-line-strong);
+  border-radius: 999px;
+  background: var(--exotic-surface-2);
+  color: var(--exotic-ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exotic-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--exotic-radius-tight);
+  border: 1px solid var(--exotic-line-strong);
+  background: var(--exotic-surface-2);
+  color: var(--exotic-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.exotic-button:hover:not(:disabled) {
+  background: var(--exotic-surface-3);
+  border-color: var(--exotic-focus);
+}
+
+.exotic-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.exotic-button--primary {
+  background: var(--exotic-ink);
+  color: var(--exotic-bg);
+  border-color: var(--exotic-ink);
+}
+
+.exotic-button--primary:hover:not(:disabled) {
+  background: var(--exotic-focus);
+  border-color: var(--exotic-focus);
+}
+
+.exotic-button--ghost {
+  background: transparent;
+  border-color: var(--exotic-line);
+}
+
+.exotic-input {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--exotic-radius-tight);
+  border: 1px solid var(--exotic-line);
+  background: var(--exotic-surface);
+  color: var(--exotic-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.exotic-input::placeholder {
+  color: var(--exotic-muted);
+}
+
+.exotic-input:focus {
+  outline: none;
+  border-color: var(--exotic-focus);
+  box-shadow: 0 0 0 1px var(--exotic-focus);
+}
