@@ -3,12 +3,35 @@ import { ExoticOptimizer } from "@exotic/optimizer";
 import { ExoticMesh } from "@exotic/mesh";
 import { ExoticDevice } from "@exotic/device";
 import { ExoticNetwork } from "@exotic/network";
-import { ExoticUI } from "@exotic/ui";
+
+// This dashboard's own theme/nav config - previously imported from @exotic/ui's
+// placeholder ExoticUI stub, which was removed when that package became a real component
+// kit (see packages/ui/src/index.ts). This data was always dashboard-specific, not part of
+// the UI library's public API, so it belongs here rather than as a compat re-export.
+const dashboardTheme = {
+  name: "black-white-static-enchanted",
+  background: "#000000",
+  foreground: "#ffffff",
+  border: "#ffffff",
+  sharp: true,
+  staticTexture: true,
+  enchanted: true,
+};
+
+const dashboardButtons = [
+  { id: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
+  { id: "optimizer", label: "Optimizer", icon: "gauge" },
+  { id: "observer", label: "Observer", icon: "activity" },
+  { id: "mesh", label: "Mesh", icon: "network" },
+  { id: "device", label: "Device", icon: "monitor" },
+  { id: "network", label: "Network", icon: "wifi" },
+  { id: "settings", label: "Settings", icon: "settings" },
+];
 
 export const ExoticDashboard = {
   title: "EXOTIC",
-  theme: ExoticUI.theme,
-  buttons: ExoticUI.buttons,
+  theme: dashboardTheme,
+  buttons: dashboardButtons,
 
   snapshot() {
     const device = ExoticDevice.current();
