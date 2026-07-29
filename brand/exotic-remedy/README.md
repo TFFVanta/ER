@@ -1,19 +1,22 @@
-# Exotic Remedy - unsorted assets
+# Exotic Remedy
 
-Candidate brand assets for "Exotic Remedy," a separate venture/product with a flamingo mascot.
+Brand assets for "Exotic Remedy," a separate venture/product with a flamingo mascot.
 **Distinct from the EXOTIC AI-platform brand** documented in `brand/identity.md` (which is
 black-and-white, minimal, operator-grade) - do not treat these as part of that system.
 
-Dropped here as-is, uploaded by the user on 2026-07-29. Not yet organized into a canonical
-style, logo lockup, or color system - `assets/` currently holds several conflicting directions:
+See `identity.md` for the canonical brand direction (flat pastel color + black/white structural
+line work + classic, non-trend patterns), chosen from the candidates below.
 
-- **Line-art / black-white**: `flamingo-mascot-lineart.png`, `er-mark-3d-blocks-bw.png`,
+`assets/` holds every uploaded candidate, including directions explicitly **not** chosen:
+
+- **Canonical - line-art / black-white**: `flamingo-mascot-lineart.png`, `er-mark-3d-blocks-bw.png`,
   `exotic-remedy-globe-emblem-bw.webp`
-- **Flat color (pink/yellow)**: `flamingo-mascot-color.png`, `flamingo-mascot-scene-color.png`
-- **Bubble typography (yellow/magenta)**: `mingo-wordmark-bubble.png`,
-  `exotic-remedy-badge-bubble.png`
-- **Thin geometric wordmark**: `mingo-wordmark-thin-sans.png`
-- **Dotted/glitch poster treatment**: `exotic-remedy-poster-glitch.png`
+- **Canonical - flat pastel color**: `flamingo-mascot-color.png`, `flamingo-mascot-scene-color.png`
+- **Canonical - wordmark**: `mingo-wordmark-thin-sans.png`
+- **Excluded - bubble typography**: `mingo-wordmark-bubble.png`, `exotic-remedy-badge-bubble.png`,
+  `er-mark-checkerboard-bubble.png`
+- **Excluded - glitch/static treatments**: `exotic-remedy-poster-glitch.png`,
+  `er-mark-glitch-static.png`
 - **Editor mockup screenshot** (source app context, not a final asset): `er-mark-editor-mockup.png`
 
-No scaffold, color tokens, or product surface exists for this venture yet - assets only.
+No product scaffold or code exists for this venture yet - brand direction only.
