@@ -19,4 +19,6 @@ line work + classic, non-trend patterns), chosen from the candidates below.
   `er-mark-glitch-static.png`
 - **Editor mockup screenshot** (source app context, not a final asset): `er-mark-editor-mockup.png`
 
-No product scaffold or code exists for this venture yet - brand direction only.
+A brand-compliant UI kit exists at `packages/ui-remedy/` (implements the bounce/wiggle motion this
+venture's own aesthetic calls for — see `aesthetic.md`), plus landing/blog templates in
+`packages/ui-remedy/templates/`. No larger product scaffold beyond that kit exists yet.
