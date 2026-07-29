@@ -1,0 +1,49 @@
+{
+  "name": "@exotic/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The official EXOTIC desktop app - the Studio workspace shell with an in-process Codex bridge.",
+  "author": "Mingo",
+  "main": "main.cjs",
+  "scripts": {
+    "dev": "electron . --dev",
+    "start": "electron .",
+    "build:renderer": "npm run build --workspace=@exotic/studio && node scripts/copy-renderer.mjs",
+    "build:bridge": "node scripts/bundle-bridge.mjs",
+    "package:win": "npm run build:renderer && npm run build:bridge && electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1"
+  },
+  "build": {
+    "appId": "center.mingo.exotic",
+    "productName": "EXOTIC",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json",
+      "assets/**/*",
+      "renderer/**/*",
+      "bridge/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EXOTIC"
+    }
+  }
+}

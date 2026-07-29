@@ -1,6 +1,9 @@
 node_modules/
 .turbo/
 dist/
+release/
+apps/desktop/renderer/
+apps/desktop/bridge/
 .env
 PORTAL/data/config.json
 PORTAL/data/portal.log
