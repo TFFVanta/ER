@@ -7,6 +7,23 @@ export type { BackendName, CliBackendOptions, LocalBackendOptions } from "./back
 export { dispatchStep } from "./dispatch.js";
 export type { DispatchOptions, DispatchResult, RoadmapStepInput } from "./dispatch.js";
 
+export {
+  DEV_ADMIN_IDENTITY,
+  DevAdminLeaseStore,
+  cleanupIsolatedExecution,
+  createIsolatedExecution,
+  ensureDevAdminCredentials,
+  integrateIsolatedExecution,
+  verifyDevAdminToken,
+} from "./dev-admin.js";
+export type {
+  DevAdminCredentials,
+  DevAdminLease,
+  DevAdminLeaseAcquireInput,
+  IntegrationResult,
+  IsolatedExecution,
+} from "./dev-admin.js";
+
 export const identity = {
   name: "@exotic/codex-worker",
   tagline: "Everything Is Exotic.",
