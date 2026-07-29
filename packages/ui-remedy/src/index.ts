@@ -10,11 +10,7 @@ export { Eyebrow } from "./components/Eyebrow.js";
 export type { EyebrowProps } from "./components/Eyebrow.js";
 export { Input } from "./components/Input.js";
 export type { InputProps } from "./components/Input.js";
-export { FadeIn } from "./components/FadeIn.js";
-export type { FadeInProps } from "./components/FadeIn.js";
-export { Section, SectionGrid } from "./components/Section.js";
-export type { SectionProps } from "./components/Section.js";
-export { Stat } from "./components/Stat.js";
-export type { StatProps } from "./components/Stat.js";
+export { BounceIn } from "./components/BounceIn.js";
+export type { BounceInProps } from "./components/BounceIn.js";
 
-export const identity = { name: "@exotic/ui", tagline: "Everything Is Exotic." };
+export const identity = { name: "@exotic/ui-remedy", tagline: "Exotic Remedy." };

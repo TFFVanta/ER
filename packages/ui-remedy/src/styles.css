@@ -1,0 +1,170 @@
+/* Exotic Remedy design tokens - mirrors brand/exotic-remedy/identity.md + aesthetic.md.
+   Flat pastel fill inside bold black outline; premium fun motion, never mechanical. */
+:root {
+  --remedy-pink: #f5c7d1;
+  --remedy-gold: #efc24c;
+  --remedy-ink: #000000;
+  --remedy-paper: #ffffff;
+  --remedy-outline: 3px;
+  --remedy-radius: 999px;
+  --remedy-radius-card: 20px;
+  --remedy-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --remedy-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: var(--remedy-font);
+}
+
+/* Motion - "premium fun" per aesthetic.md: a confident overshoot on entrance, a small wiggle on
+   hover. Never mechanical/linear - the bounce is the point. */
+@keyframes remedy-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes remedy-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+.remedy-bounce-in {
+  animation: remedy-bounce-in 520ms var(--remedy-ease-bounce) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .remedy-bounce-in {
+    animation-duration: 1ms;
+  }
+  .remedy-button:hover,
+  .remedy-card:hover {
+    animation: none !important;
+  }
+}
+
+.remedy-card {
+  border: var(--remedy-outline) solid var(--remedy-ink);
+  border-radius: var(--remedy-radius-card);
+  padding: 24px;
+  background: var(--remedy-paper);
+  color: var(--remedy-ink);
+  transition: transform 200ms var(--remedy-ease-bounce);
+}
+
+.remedy-card--interactive:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+}
+
+.remedy-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--remedy-ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.remedy-chip {
+  display: inline-block;
+  margin: 0 8px 8px 0;
+  padding: 8px 14px;
+  border: 2px solid var(--remedy-ink);
+  border-radius: var(--remedy-radius);
+  background: var(--remedy-pink);
+  color: var(--remedy-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.remedy-chip--gold {
+  background: var(--remedy-gold);
+}
+
+.remedy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: var(--remedy-radius);
+  border: var(--remedy-outline) solid var(--remedy-ink);
+  background: var(--remedy-pink);
+  color: var(--remedy-ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 180ms var(--remedy-ease-bounce);
+}
+
+.remedy-button:hover:not(:disabled) {
+  animation: remedy-wiggle 420ms ease-in-out;
+}
+
+.remedy-button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.remedy-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.remedy-button--gold {
+  background: var(--remedy-gold);
+}
+
+.remedy-button--outline {
+  background: var(--remedy-paper);
+}
+
+.remedy-input {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--remedy-radius);
+  border: 2px solid var(--remedy-ink);
+  background: var(--remedy-paper);
+  color: var(--remedy-ink);
+  font-size: 14px;
+}
+
+.remedy-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.remedy-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--remedy-gold);
+}
+
+/* Classic pattern system (aesthetic.md): background/accent texture only, two-color, small
+   scale - never behind or replacing the mark's own line work. */
+.remedy-pattern-dots {
+  background-image: radial-gradient(var(--remedy-ink) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+.remedy-pattern-pinstripe {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--remedy-ink) 0,
+    var(--remedy-ink) 1.5px,
+    transparent 1.5px,
+    transparent 12px
+  );
+}

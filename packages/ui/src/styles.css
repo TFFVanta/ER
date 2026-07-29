@@ -17,14 +17,41 @@
   --exotic-border: 1px solid var(--exotic-line);
   --exotic-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
   --exotic-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --exotic-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --exotic-ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--exotic-font);
 }
 
-.exotic-card,
-.exotic-button,
-.exotic-input,
-.exotic-chip,
-.exotic-eyebrow {
-  font-family: var(--exotic-font);
+/* Motion - quiet and premium, never playful (see brand/identity.md Design Law). Reduced-motion
+   users get instant state changes; nothing here should ever be required to understand content. */
+@keyframes exotic-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes exotic-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exotic-fade-in {
+  animation: exotic-fade-up 480ms var(--exotic-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exotic-fade-in {
+    animation-duration: 1ms;
+  }
 }
 
 .exotic-card {
@@ -34,6 +61,13 @@
   padding: 24px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0)), var(--exotic-surface);
   color: var(--exotic-ink);
+  transition: transform 200ms var(--exotic-ease), border-color 200ms var(--exotic-ease), box-shadow 200ms var(--exotic-ease);
+}
+
+.exotic-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--exotic-line-strong);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.34);
 }
 
 .exotic-eyebrow {
@@ -82,6 +116,10 @@
   border-color: var(--exotic-focus);
 }
 
+.exotic-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 .exotic-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -123,4 +161,58 @@
   outline: none;
   border-color: var(--exotic-focus);
   box-shadow: 0 0 0 1px var(--exotic-focus);
+}
+
+.exotic-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 64px 32px;
+}
+
+.exotic-section__header {
+  margin-bottom: 40px;
+}
+
+.exotic-section__title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--exotic-ink);
+}
+
+.exotic-section__description {
+  margin: 12px 0 0;
+  max-width: 60ch;
+  color: var(--exotic-muted);
+  line-height: 1.6;
+}
+
+.exotic-section__grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.exotic-stat {
+  border: var(--exotic-border);
+  border-radius: var(--exotic-radius-tight);
+  padding: 20px;
+  background: var(--exotic-surface);
+}
+
+.exotic-stat__value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--exotic-ink);
+}
+
+.exotic-stat__label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--exotic-muted);
 }

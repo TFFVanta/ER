@@ -4,11 +4,13 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title">
   eyebrow?: ReactNode;
   title?: ReactNode;
   children?: ReactNode;
+  interactive?: boolean;
 }
 
-export function Card({ eyebrow, title, children, className, ...rest }: CardProps) {
+export function Card({ eyebrow, title, children, className, interactive, ...rest }: CardProps) {
+  const interactiveClass = interactive ? " exotic-card--interactive" : "";
   return (
-    <div className={`exotic-card${className ? ` ${className}` : ""}`} {...rest}>
+    <div className={`exotic-card${interactiveClass}${className ? ` ${className}` : ""}`} {...rest}>
       {eyebrow ? <span className="exotic-eyebrow">{eyebrow}</span> : null}
       {title ? <h2>{title}</h2> : null}
       {children}

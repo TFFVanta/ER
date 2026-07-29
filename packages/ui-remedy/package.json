@@ -1,0 +1,27 @@
+{
+  "name": "@exotic/ui-remedy",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Exotic Remedy's brand-native React component library - flat pastel color, bold black outline, premium fun animation.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "style": "dist/index.css",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}
