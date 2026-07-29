@@ -18,6 +18,13 @@ describe('roadmapPatterns', () => {
     const pattern = findPattern('phase1-foundation')!;
     expect(() => validatePattern(pattern)).not.toThrow();
   });
+
+  it('includes the exotic-remedy-launch pattern and validates cleanly', () => {
+    expect(roadmapPatterns.map((pattern) => pattern.name)).toContain('exotic-remedy-launch');
+    const pattern = findPattern('exotic-remedy-launch')!;
+    expect(pattern.steps.length).toBeGreaterThan(0);
+    expect(() => validatePattern(pattern)).not.toThrow();
+  });
 });
 
 describe('composeRoadmap', () => {

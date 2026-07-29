@@ -214,7 +214,83 @@ const phase1Foundation: RoadmapPattern = {
   ],
 };
 
-export const roadmapPatterns: readonly RoadmapPattern[] = [phase1Foundation];
+// Exotic Remedy's launch pattern - grounded in what's actually true today: the brand direction
+// (identity.md/aesthetic.md) and component kit (@exotic/ui-remedy) already exist; these are the
+// real next steps toward an actual storefront, not a generic "10 studios" template.
+const exoticRemedyLaunch: RoadmapPattern = {
+  name: "exotic-remedy-launch",
+  description:
+    "Turn the Exotic Remedy brand direction and component kit into a real, publicly reachable " +
+    "storefront: vectorize the mascot, build and deploy the site, write launch copy, and start " +
+    "tracking real revenue/cost.",
+  steps: [
+    {
+      id: "ER-01",
+      title: "Vectorize the flamingo mascot",
+      summary:
+        "Convert the raster line-art mascot (brand/exotic-remedy/assets/flamingo-mascot-lineart.png) into a real vector source, unblocking a reusable <Mascot /> component in @exotic/ui-remedy.",
+      expectedDuration: "60-120 min",
+      priority: "High",
+      owner: "Codex",
+      lane: "brand",
+      dependsOn: [],
+    },
+    {
+      id: "ER-02",
+      title: "Build the storefront landing page",
+      summary:
+        "Turn packages/ui-remedy/templates/LandingPage.tsx into a real app - a buildable, servable site, not just a reference file.",
+      expectedDuration: "90-150 min",
+      priority: "Critical",
+      owner: "Codex",
+      lane: "website",
+      dependsOn: [],
+    },
+    {
+      id: "ER-03",
+      title: "Write brand voice and product copy",
+      summary: "Real product/positioning copy for the storefront and first blog post, in Exotic Remedy's classic-not-trendy voice.",
+      expectedDuration: "45-90 min",
+      priority: "High",
+      owner: "Codex",
+      lane: "marketing",
+      dependsOn: [],
+    },
+    {
+      id: "ER-04",
+      title: "Deploy the storefront publicly",
+      summary: "Ship the storefront to a real, reachable URL.",
+      expectedDuration: "30-60 min",
+      priority: "Critical",
+      owner: "Codex",
+      lane: "website",
+      dependsOn: ["ER-02"],
+    },
+    {
+      id: "ER-05",
+      title: "Record the first real ledger entries",
+      summary:
+        "Once there is real revenue or cost, add entries to .exotic/company/ledger.json so `exo company status` reports actual numbers instead of \"no data.\"",
+      expectedDuration: "10-20 min",
+      priority: "Normal",
+      owner: "Operator",
+      lane: "operations",
+      dependsOn: [],
+    },
+    {
+      id: "ER-06",
+      title: "Prepare the launch announcement",
+      summary: "Draft and schedule the public launch announcement once the storefront is live and copy is final.",
+      expectedDuration: "30-45 min",
+      priority: "High",
+      owner: "Codex",
+      lane: "marketing",
+      dependsOn: ["ER-03", "ER-04"],
+    },
+  ],
+};
+
+export const roadmapPatterns: readonly RoadmapPattern[] = [phase1Foundation, exoticRemedyLaunch];
 
 export function findPattern(name: string): RoadmapPattern | undefined {
   return roadmapPatterns.find((pattern) => pattern.name === name);
