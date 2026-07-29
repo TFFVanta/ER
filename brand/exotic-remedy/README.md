@@ -22,3 +22,7 @@ line work + classic, non-trend patterns), chosen from the candidates below.
 A brand-compliant UI kit exists at `packages/ui-remedy/` (implements the bounce/wiggle motion this
 venture's own aesthetic calls for — see `aesthetic.md`), plus landing/blog templates in
 `packages/ui-remedy/templates/`. No larger product scaffold beyond that kit exists yet.
+
+Product category is confirmed: **designer clothing and apparel**, launching via print-on-demand
+first (near-zero capital) before any cut-and-sew commitment - see `MARKETING_STRATEGY.md`'s
+"Launch path" section for the full reasoning.
