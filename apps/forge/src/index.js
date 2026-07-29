@@ -785,6 +785,65 @@ async function harmonyCommand(argv) {
   if (hasError) process.exit(1);
 }
 
+function companyHelp() {
+  console.log([
+    'Company Commands:',
+    '  company status',
+    ''
+  ].join(nl));
+}
+
+async function companyCommand(argv) {
+  const subcommand = argv[1] || 'status';
+  if (subcommand !== 'status') {
+    companyHelp();
+    return;
+  }
+
+  const { summarizeVenture, auditBrand, readLedger } = await loadWorkspacePackage('company-engine');
+
+  const ventures = [
+    summarizeVenture({ name: 'EXOTIC', bridgeRoot: bridgeRoot() }),
+    summarizeVenture({ name: 'Exotic Remedy', bridgeRoot: path.join(root, '.exotic', 'exotic-remedy-bridge') }),
+  ];
+
+  console.log('=== Ops ===');
+  for (const venture of ventures) {
+    if (!venture.hasBridge) {
+      console.log(`${venture.name}: no operational bridge configured yet.`);
+      continue;
+    }
+    const counts = Object.entries(venture.stepCounts || {}).map(([status, n]) => `${status}=${n}`).join(', ');
+    console.log(`${venture.name}: ${venture.totalSteps} steps (${counts}) | autoMode=${venture.autoMode} | status=${venture.status}`);
+    if (venture.blockers && venture.blockers.length) {
+      console.log(`  blockers: ${JSON.stringify(venture.blockers)}`);
+    }
+  }
+
+  console.log('');
+  console.log('=== Brand audit ===');
+  const findings = auditBrand({
+    exoticUiStylesPath: path.join(root, 'packages', 'ui', 'src', 'styles.css'),
+    remedyUiStylesPath: path.join(root, 'packages', 'ui-remedy', 'src', 'styles.css'),
+  });
+  for (const finding of findings) {
+    console.log(`[${finding.level.toUpperCase()}] ${finding.brand}: ${finding.message}`);
+  }
+
+  console.log('');
+  console.log('=== Finance ===');
+  const ledgerPath = path.join(root, '.exotic', 'company', 'ledger.json');
+  const finance = readLedger(ledgerPath);
+  if (!finance.hasData) {
+    console.log(`No ledger data (${ledgerPath} not found or empty). No revenue/cost source is wired up yet - add entries manually or integrate a real source.`);
+  } else {
+    console.log(`Revenue: ${finance.totalRevenue} | Cost: ${finance.totalCost} | Net: ${finance.net} (${finance.entryCount} entries)`);
+    for (const [venture, totals] of Object.entries(finance.byVenture)) {
+      console.log(`  ${venture}: revenue=${totals.revenue} cost=${totals.cost}`);
+    }
+  }
+}
+
 function workerHelp() {
   console.log([
     'Worker Commands:',
@@ -953,6 +1012,7 @@ function help() {
     '  pattern show <name>',
     '  pattern apply <name> [--force]',
     '  harmony check',
+    '  company status',
     '  new package <name>',
     '  build',
     '  help',
@@ -988,6 +1048,11 @@ if (args[0] === 'doctor') {
   });
 } else if (args[0] === 'harmony') {
   harmonyCommand(args).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+} else if (args[0] === 'company') {
+  companyCommand(args).catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });
