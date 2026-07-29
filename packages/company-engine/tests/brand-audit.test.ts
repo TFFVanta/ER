@@ -21,6 +21,15 @@ describe("auditBrand", () => {
     expect(exoticFinding?.level).toBe("warn");
   });
 
+  it("flags gradients in the EXOTIC kit", () => {
+    const exoticCss = writeTempCss(".exotic-card { background: linear-gradient(180deg, #fff, #000); }");
+    const remedyCss = writeTempCss(".remedy-card { border: 3px solid black; }");
+
+    const findings = auditBrand({ exoticUiStylesPath: exoticCss, remedyUiStylesPath: remedyCss });
+    const gradientFinding = findings.find((f) => f.brand === "EXOTIC" && f.message.includes("gradient"));
+    expect(gradientFinding?.level).toBe("warn");
+  });
+
   it("flags gradient/shadow fills on Exotic Remedy's core components", () => {
     const exoticCss = writeTempCss(".exotic-fade-in { animation: fade 300ms; }");
     const remedyCss = writeTempCss(".remedy-card { background: linear-gradient(red, blue); }");

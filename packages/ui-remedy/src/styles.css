@@ -152,6 +152,36 @@
   box-shadow: 0 0 0 3px var(--remedy-gold);
 }
 
+.remedy-section {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 56px 32px;
+}
+
+.remedy-section__header {
+  margin-bottom: 32px;
+}
+
+.remedy-section__title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--remedy-ink);
+}
+
+.remedy-section__description {
+  margin: 10px 0 0;
+  max-width: 58ch;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.6;
+}
+
+.remedy-section__grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 /* Classic pattern system (aesthetic.md): background/accent texture only, two-color, small
    scale - never behind or replacing the mark's own line work. */
 .remedy-pattern-dots {

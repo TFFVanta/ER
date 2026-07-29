@@ -12,5 +12,7 @@ export { Input } from "./components/Input.js";
 export type { InputProps } from "./components/Input.js";
 export { BounceIn } from "./components/BounceIn.js";
 export type { BounceInProps } from "./components/BounceIn.js";
+export { Section, SectionGrid } from "./components/Section.js";
+export type { SectionProps } from "./components/Section.js";
 
 export const identity = { name: "@exotic/ui-remedy", tagline: "Exotic Remedy." };

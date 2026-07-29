@@ -37,6 +37,16 @@ export function auditBrand(options: { exoticUiStylesPath: string; remedyUiStyles
     } else {
       findings.push({ level: "ok", brand: "EXOTIC", message: "No playful animation names in @exotic/ui." });
     }
+
+    if (css.includes("linear-gradient") || css.includes("radial-gradient")) {
+      findings.push({
+        level: "warn",
+        brand: "EXOTIC",
+        message: `Found a gradient in @exotic/ui - violates "black and white first... do not build EXOTIC around rainbow palettes" and the Anti-Canon's "generic startup gradients" (brand/EXOTIC_MASTER_CANON.md).`,
+      });
+    } else {
+      findings.push({ level: "ok", brand: "EXOTIC", message: "No gradients in @exotic/ui." });
+    }
   }
 
   if (fs.existsSync(options.remedyUiStylesPath)) {

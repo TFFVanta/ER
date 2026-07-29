@@ -59,7 +59,7 @@
   border-radius: var(--exotic-radius);
   box-shadow: var(--exotic-shadow);
   padding: 24px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0)), var(--exotic-surface);
+  background: var(--exotic-surface);
   color: var(--exotic-ink);
   transition: transform 200ms var(--exotic-ease), border-color 200ms var(--exotic-ease), box-shadow 200ms var(--exotic-ease);
 }
@@ -85,7 +85,7 @@
   margin: 0 8px 8px 0;
   padding: 9px 12px;
   border: 1px solid var(--exotic-line-strong);
-  border-radius: 999px;
+  border-radius: var(--exotic-radius-tight);
   background: var(--exotic-surface-2);
   color: var(--exotic-ink);
   font-size: 11px;
@@ -161,6 +161,39 @@
   outline: none;
   border-color: var(--exotic-focus);
   box-shadow: 0 0 0 1px var(--exotic-focus);
+}
+
+/* Monochrome status pills - EXOTIC's brand law forbids introducing new hues ("black and white
+   first", no rainbow palettes), so tone is communicated by structure/weight, not color. */
+.exotic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--exotic-line-strong);
+  color: var(--exotic-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.exotic-badge--positive {
+  background: var(--exotic-ink);
+  color: var(--exotic-bg);
+  border-color: var(--exotic-ink);
+}
+
+.exotic-badge--warning {
+  border-style: dashed;
+  color: var(--exotic-ink);
+}
+
+.exotic-badge--critical {
+  border-width: 2px;
+  color: var(--exotic-ink);
+  font-weight: 700;
 }
 
 .exotic-section {

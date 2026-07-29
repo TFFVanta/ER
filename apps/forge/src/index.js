@@ -800,7 +800,7 @@ async function companyCommand(argv) {
     return;
   }
 
-  const { summarizeVenture, auditBrand, readLedger } = await loadWorkspacePackage('company-engine');
+  const { summarizeVenture, auditBrand, readLedger, readRepoHealth } = await loadWorkspacePackage('company-engine');
 
   const ventures = [
     summarizeVenture({ name: 'EXOTIC', bridgeRoot: bridgeRoot() }),
@@ -841,6 +841,20 @@ async function companyCommand(argv) {
     for (const [venture, totals] of Object.entries(finance.byVenture)) {
       console.log(`  ${venture}: revenue=${totals.revenue} cost=${totals.cost}`);
     }
+  }
+
+  console.log('');
+  console.log('=== Repo health ===');
+  const health = readRepoHealth({
+    repoRoot: root,
+    verificationJsonPath: path.join(bridgeRoot(), 'verification.json'),
+  });
+  console.log(`Branch: ${health.branch ?? 'unknown'} | Uncommitted files: ${health.uncommittedFiles}`);
+  if (!health.lastVerification.hasData) {
+    console.log('No verification.json found yet - run "npm run verify" to generate one.');
+  } else {
+    const v = health.lastVerification;
+    console.log(`Last verify (${v.verifiedAt}): ${v.status} | build ${v.buildPassed}/${v.buildTotal} | test ${v.testPassed}/${v.testTotal}`);
   }
 }
 

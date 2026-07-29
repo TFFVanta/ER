@@ -16,5 +16,7 @@ export { Section, SectionGrid } from "./components/Section.js";
 export type { SectionProps } from "./components/Section.js";
 export { Stat } from "./components/Stat.js";
 export type { StatProps } from "./components/Stat.js";
+export { Badge } from "./components/Badge.js";
+export type { BadgeProps, BadgeTone } from "./components/Badge.js";
 
 export const identity = { name: "@exotic/ui", tagline: "Everything Is Exotic." };
