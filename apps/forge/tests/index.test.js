@@ -38,7 +38,7 @@ test('list packages prints an inventory header', () => {
 test('help is shown for unknown commands', () => {
   const result = run(['unknown']);
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Commands:/);
+  assert.match(result.stdout, /WHAT it does, then WHY you would use it/);
 });
 
 test('objective create persists and inspect reloads it from workspace state', () => {
