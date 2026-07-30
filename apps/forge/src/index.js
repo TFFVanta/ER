@@ -5,6 +5,7 @@ import cp from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { createObjectiveStore } from './objectives.js';
 import { runHarmonyCheck } from './harmony.js';
+import { listBlueprints, blueprintFiles } from './blueprints.js';
 
 const args = process.argv.slice(2);
 const nl = String.fromCharCode(10);
@@ -750,6 +751,70 @@ async function patternCommand(argv) {
   patternHelp();
 }
 
+function blueprintHelp() {
+  console.log([
+    'Blueprint Commands:',
+    '  blueprint list',
+    '  blueprint show <name>',
+    '  blueprint apply <name> <package-name>',
+    ''
+  ].join(nl));
+}
+
+function blueprintCommand(argv) {
+  const subcommand = argv[1];
+
+  if (subcommand === 'list') {
+    for (const blueprint of listBlueprints()) {
+      console.log(`${blueprint.name}  -  ${blueprint.describe}`);
+    }
+    return;
+  }
+
+  if (subcommand === 'show') {
+    const name = argv[2];
+    const blueprint = listBlueprints().find((item) => item.name === name);
+    if (!blueprint) {
+      console.error(`Unknown blueprint: ${name}. Run "exo blueprint list" to see available blueprints.`);
+      process.exit(1);
+    }
+    console.log(`${blueprint.name} - ${blueprint.describe}`);
+    console.log('');
+    for (const file of blueprintFiles(name, 'example-package-name')) {
+      console.log(`  ${file.path}`);
+    }
+    return;
+  }
+
+  if (subcommand === 'apply') {
+    const blueprintName = argv[2];
+    const packageName = cleanName(argv[3]);
+    if (!blueprintName || !packageName) {
+      console.error('Usage: exo blueprint apply <name> <package-name>');
+      process.exit(1);
+    }
+    const dir = path.join(root, 'packages', packageName);
+    if (fs.existsSync(dir)) {
+      console.error('Package already exists: packages/' + packageName);
+      process.exit(1);
+    }
+    let files;
+    try {
+      files = blueprintFiles(blueprintName, packageName);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+    for (const file of files) {
+      write(path.join(dir, file.path), file.content);
+    }
+    console.log(`Wrote ${files.length} files from blueprint "${blueprintName}" to packages/${packageName}`);
+    return;
+  }
+
+  blueprintHelp();
+}
+
 function harmonyHelp() {
   console.log([
     'Harmony Commands:',
@@ -809,7 +874,7 @@ async function companyCommand(argv) {
     return;
   }
 
-  const { ventures, brandFindings, finance, repoHealth: health } = status;
+  const { ventures, brandFindings, finance, repoHealth: health, learning } = status;
 
   console.log('=== Ops ===');
   for (const venture of ventures) {
@@ -849,6 +914,17 @@ async function companyCommand(argv) {
   } else {
     const v = health.lastVerification;
     console.log(`Last verify (${v.verifiedAt}): ${v.status} | build ${v.buildPassed}/${v.buildTotal} | test ${v.testPassed}/${v.testTotal}`);
+  }
+
+  console.log('');
+  console.log('=== Learning Labs ===');
+  if (!learning.hasData) {
+    console.log('No lessons captured yet - run "exo operation learn <operation-id>" after a completed operation.');
+  } else {
+    console.log(`${learning.totalLessons} lesson(s) captured, ${learning.promotedCount} promoted to a new objective.`);
+    for (const lesson of learning.recent) {
+      console.log(`  ${lesson.promoted ? '[promoted]' : '[captured] '} ${lesson.id} - ${lesson.title}`);
+    }
   }
 }
 
@@ -1021,6 +1097,9 @@ function help() {
     '  pattern apply <name> [--force]',
     '  harmony check',
     '  company status',
+    '  blueprint list',
+    '  blueprint show <name>',
+    '  blueprint apply <name> <package-name>',
     '  new package <name>',
     '  build',
     '  help',
@@ -1064,6 +1143,8 @@ if (args[0] === 'doctor') {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });
+} else if (args[0] === 'blueprint') {
+  blueprintCommand(args);
 } else if (args[0] === 'new' && args[1] === 'package') {
   createPackage(args[2]);
 } else if (args[0] === 'build') {

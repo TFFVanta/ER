@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Dispatches roadmap production-fabric cells to a real worker backend (Claude CLI, Codex CLI, or a local OpenAI-compatible model endpoint) and captures evidence-backed receipts.",
   "dependencies": {
-    "@exotic/workflow": "0.1.0"
+    "@exotic/workflow": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

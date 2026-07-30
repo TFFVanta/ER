@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@exotic/contracts": "0.1.0",
-    "@exotic/types": "0.1.0"
+    "@exotic/contracts": "*",
+    "@exotic/types": "*"
   },
   "devDependencies": {
-    "@exotic/workflow": "0.1.0"
+    "@exotic/workflow": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

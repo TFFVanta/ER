@@ -3,6 +3,7 @@ import { summarizeVenture, type VentureOpsSummary } from "./ops.js";
 import { auditBrand, type BrandFinding } from "./brand-audit.js";
 import { readLedger, type FinanceSummary } from "./finance.js";
 import { readRepoHealth, type RepoHealth } from "./repo-health.js";
+import { readLearningLabs, type LearningSummary } from "./learning.js";
 import { ventureRegistry } from "./ventures.js";
 
 export interface CompanyStatus {
@@ -10,6 +11,7 @@ export interface CompanyStatus {
   brandFindings: BrandFinding[];
   finance: FinanceSummary;
   repoHealth: RepoHealth;
+  learning: LearningSummary;
 }
 
 // The single composition of every company-engine module - previously this exact assembly
@@ -35,5 +37,7 @@ export function gatherCompanyStatus(repoRoot: string): CompanyStatus {
     verificationJsonPath: path.join(repoRoot, ".exotic", "codex-bridge", "verification.json"),
   });
 
-  return { ventures, brandFindings, finance, repoHealth };
+  const learning = readLearningLabs(path.join(repoRoot, ".exotic", "state", "objectives.json"));
+
+  return { ventures, brandFindings, finance, repoHealth, learning };
 }

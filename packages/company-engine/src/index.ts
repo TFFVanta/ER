@@ -10,6 +10,8 @@ export { ventureRegistry } from "./ventures.js";
 export type { VentureRegistryEntry } from "./ventures.js";
 export { gatherCompanyStatus } from "./status.js";
 export type { CompanyStatus } from "./status.js";
+export { readLearningLabs } from "./learning.js";
+export type { LearningSummary, LessonSummary } from "./learning.js";
 
 export const identity = {
   name: "@exotic/company-engine",

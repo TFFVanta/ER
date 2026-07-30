@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@exotic/types": "0.1.0"
+    "@exotic/types": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
