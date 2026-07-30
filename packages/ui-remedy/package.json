@@ -1,6 +1,6 @@
 {
   "name": "@exotic/ui-remedy",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Exotic Remedy's brand-native React component library - flat pastel color, bold black outline, premium fun animation.",
   "main": "dist/index.js",

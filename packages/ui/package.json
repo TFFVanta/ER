@@ -1,6 +1,6 @@
 {
   "name": "@exotic/ui",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "EXOTIC's brand-native React component library - black-and-white, sharp, operator-grade.",
   "main": "dist/index.js",

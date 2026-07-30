@@ -1,6 +1,6 @@
 {
   "name": "@exotic/company-engine",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Advise-only meta-layer over all EXOTIC ventures: ops summary, brand-law audit, finance ledger. Surfaces state for a human to decide on - takes no autonomous action.",
   "main": "src/index.ts",

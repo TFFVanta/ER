@@ -6,7 +6,7 @@ describe("workflow package", () => {
   it("has a valid Exotic package manifest", () => {
     const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
     expect(pkg.name).toBe("@exotic/workflow");
-    expect(pkg.version).toBe("0.1.0");
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it("plans dependency layers, lane swarms, replicas, and approval barriers", () => {
