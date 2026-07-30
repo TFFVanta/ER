@@ -23,6 +23,8 @@
     "directories": {
       "output": "release"
     },
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
     "files": [
       "main.cjs",
       "preload.cjs",
