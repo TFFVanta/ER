@@ -1,3 +1,0 @@
-Integrate EXOTIC Continuous Operations Runtime v1.0 into my live C:\Projects\Exotic repository.
-
-Inspect the actual source tree, apply every compatibility patch without overwriting unrelated work, update the v0.2 Autonomy repository to use durable sequences, wire `exotic runtime ...` into the existing CLI dispatcher, resolve all MSVC/CMake errors, run every test, launch the runtime in simulation mode, submit one complete Objective → Proposal → Agent Assignment → Governance → Resource Reservation → Operation → Verification cycle, verify the SQLite audit/trace/metric records and dashboard output, then give me the exact one-line command to run EXOTIC and the exact one-line command to install it as a Windows service.

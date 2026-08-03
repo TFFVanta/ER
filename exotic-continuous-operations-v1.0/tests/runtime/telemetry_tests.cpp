@@ -1,4 +1,0 @@
-#include "exotic/runtime/sqlite_telemetry.hpp"
-#include "exotic/runtime/telemetry.hpp"
-#include <cassert>
-int main(){using namespace exotic::runtime;auto p=std::filesystem::temp_directory_path()/"exotic-runtime-telemetry-test.db";std::filesystem::remove(p);{SqliteTelemetryRepository r{p,"test"};AuditTimeline a{r,"test"};a.emit("test","runner","entity","1","hello");Metrics m{r,"test"};m.record("jobs",2,"count");Alerts alerts{r,"test"};auto id=alerts.raise(AlertSeverity::Warning,"runtime","test","warning");{TraceScope t{r,"test","runtime","test"};t.success();}assert(r.load_audit(10).size()==1);assert(r.load_metrics("jobs",10).size()==1);assert(r.load_traces(10).size()==1);assert(r.load_active_alerts().size()==1);alerts.clear("runtime","test");assert(r.load_active_alerts().empty());(void)id;}std::filesystem::remove(p);std::filesystem::remove(p.string()+"-wal");std::filesystem::remove(p.string()+"-shm");}

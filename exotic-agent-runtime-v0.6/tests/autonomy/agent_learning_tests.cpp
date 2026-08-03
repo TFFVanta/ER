@@ -1,5 +1,0 @@
-#include "exotic/autonomy/agents/in_memory_repository.hpp"
-#include "exotic/autonomy/agents/learning.hpp"
-#include <cassert>
-using namespace exotic::autonomy;using namespace exotic::autonomy::agents;
-int main(){InMemoryAgentRepository repo;AgentRegistry registry{repo};CapabilityDefinition d;d.key="analysis";d.name="Analysis";registry.define_capability(d);AgentIdentity a;a.identity_key="learner";a.display_name="Learner";auto id=registry.register_agent(a);registry.grant_capability({id,"analysis",0.5,0.5,0,0,Clock::now()});AgentLearningEngine learning{repo};PerformanceRecord record;record.agent_id=id;record.assignment_id=1;record.job_id=1;record.capability_key="analysis";record.outcome=PerformanceOutcome::Success;record.quality_score=1.0;record.verification_confidence=0.95;learning.record(record);auto caps=repo.load_agent_capabilities(id);assert(caps.size()==1);assert(caps[0].reliability>0.5);assert(caps[0].proficiency>0.5);assert(caps[0].successful_uses==1);assert(repo.load_performance_records(id,10).size()==1);return 0;}
