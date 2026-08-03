@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Sparkles,
   TowerControl,
-  Workflow,
   Wrench,
   X,
 } from "lucide-react";
@@ -29,74 +28,75 @@ const primaryTabs = [
 
 const platformPillars = [
   {
-    title: "Objectives",
-    detail: "EXOTIC turns broad direction into structured objectives, tracked execution, and linked evidence.",
+    title: "Authorization required",
+    detail: "No program runs without an explicit authorization attestation on file. No attestation, no scan - not a policy, a gate.",
   },
   {
-    title: "Studios",
-    detail: "Ideas, product, design, website, development, marketing, workflows, and operations share one workspace.",
+    title: "Hard budget ceilings",
+    detail: "$5/day, $100/month, 500 requests/day, 60 runtime-minutes/day by default. Cycles stop themselves before they cost you anything unplanned.",
   },
   {
-    title: "Workflows",
-    detail: "The platform coordinates repeatable execution instead of leaving work scattered across disconnected tools.",
+    title: "Passive-only by design",
+    detail: "Execution class is safe-passive: HTTPS posture and header checks, never active exploitation.",
   },
   {
-    title: "Evidence",
-    detail: "Artifacts, decisions, and operational history stay attached to the work that produced them.",
+    title: "One global kill switch",
+    detail: "A single switch halts every running cycle immediately, regardless of what's in flight.",
   },
 ];
 
 const capabilityCards = [
   {
-    title: "Venture workspace",
-    detail: "A single EXOTIC environment for planning, building, launching, and operating real projects.",
-    icon: Compass,
+    title: "Scope-locked",
+    detail: "Programs are locked to their attested authorization; scope-bypass is on the immutable prohibited list, not left to judgment.",
+    icon: ShieldCheck,
   },
   {
-    title: "Execution systems",
-    detail: "Connected runtime, workflows, and operations surfaces for moving from intent to implementation.",
-    icon: Workflow,
-  },
-  {
-    title: "Artifact production",
-    detail: "Outputs are meant to be real, editable, and deployable instead of static concept decks.",
-    icon: ScrollText,
-  },
-  {
-    title: "Operational control",
-    detail: "Portal and ops surfaces separate user work from administrative and runtime controls.",
+    title: "Budget-gated, not just monitored",
+    detail: "Daily and monthly dollar, request, and runtime ceilings are enforced before each cycle starts, not audited after the fact.",
     icon: TowerControl,
+  },
+  {
+    title: "Nothing destructive, ever",
+    detail: "No denial-of-service, credential stuffing, password spraying, social engineering, phishing, malware, persistence, or destructive data access - by immutable list, not by prompt.",
+    icon: Wrench,
+  },
+  {
+    title: "Evidence per cycle",
+    detail: "Every cycle records what it checked, what it found, and what budget it spent - not just a status claim.",
+    icon: ScrollText,
   },
 ];
 
 const artifactCards = [
   {
-    title: "EXOTIC Portal",
-    detail: "Public and authenticated workspace surfaces for navigating the platform.",
-    source: "root src/",
+    title: "Daily ceiling",
+    detail: "Hard stop once today's spend or request count is reached - no operator action required.",
+    source: "$5.00 / 500 requests",
   },
   {
-    title: "Operations Console v1.0",
-    detail: "Dedicated operations console implementation for runtime oversight and control.",
-    source: "operations-console/",
+    title: "Monthly ceiling",
+    detail: "A second, independent cap so a busy day can't quietly run through a month's budget.",
+    source: "$100.00",
   },
   {
-    title: "Continuous Operations Runtime v1.0",
-    detail: "Underlying runtime layer for service lifecycle, telemetry, health, and recovery.",
-    source: "exotic-continuous-operations-v1.0/",
+    title: "Runtime ceiling",
+    detail: "Even with budget remaining, EXOTIC won't run longer than this per day.",
+    source: "60 minutes / day",
   },
   {
-    title: "EXOTIC Studio",
-    detail: "Additional app surface for studio-focused workflows and creation flows.",
-    source: "exotic-studio/",
+    title: "Concurrency limit",
+    detail: "Caps how much runs at once, independent of the dollar and request budgets.",
+    source: "2 concurrent",
   },
 ];
 
 const trustItems = [
-  "Public, authenticated, and operational surfaces should stay separate.",
-  "Production deploys should move through Git, validation, health checks, and rollback.",
-  "DNS and mail records must be preserved before any domain cutover or record edits.",
-  "No runtime state should be shown as live unless it is backed by a real source.",
+  "Authorization is attested per program, explicitly, before anything runs against it.",
+  "Denial-of-service, credential stuffing, password spraying, social engineering, phishing, malware deployment, persistence, destructive data access, third-party targeting, and scope-bypass are on an immutable prohibited list.",
+  "Budget, request, and runtime ceilings are enforced pre-cycle, not reviewed after the fact.",
+  "A global kill switch halts every running cycle immediately.",
+  "No runtime state is shown as live unless it is backed by a real source.",
 ];
 
 function App() {
@@ -108,9 +108,9 @@ function App() {
   const commandItems = useMemo(
     () => [
       { id: "overview", title: "Overview", subtitle: "What EXOTIC is", href: "#overview" },
-      { id: "system", title: "System pillars", subtitle: "Core platform structure", href: "#system" },
-      { id: "artifacts", title: "Artifacts", subtitle: "Current platform surfaces", href: "#artifacts" },
-      { id: "trust", title: "Trust and operations", subtitle: "Deployment and safety posture", href: "#trust" },
+      { id: "system", title: "Safety pillars", subtitle: "Authorization, budget, passivity, kill switch", href: "#system" },
+      { id: "artifacts", title: "Budget", subtitle: "Default ceilings", href: "#artifacts" },
+      { id: "trust", title: "Trust and operations", subtitle: "The immutable prohibited list", href: "#trust" },
       { id: "portal", title: "Portal host", subtitle: "portal.mingo.center", href: "https://portal.mingo.center" },
       { id: "ops", title: "Ops host", subtitle: "ops.mingo.center", href: "https://ops.mingo.center" },
     ],
@@ -203,12 +203,12 @@ function App() {
               <ArrowRight size={18} />
             </button>
             <button type="button" className="secondaryButton" onClick={() => navigateTo("#artifacts")}>
-              <span>Inspect current artifacts</span>
+              <span>See the default budget</span>
             </button>
           </div>
 
           <div className="heroFacts">
-            <InfoPill label="Mission" value="Connected execution" />
+            <InfoPill label="Execution class" value="Safe-passive" />
             <InfoPill label="State" value={surface.status} />
             <InfoPill label="Model" value="Git-driven deployment" />
           </div>
@@ -224,8 +224,10 @@ function App() {
           </div>
 
           <p className="sectionIntro">
-            EXOTIC is an AI-native operating workspace. It is meant to unify objectives, studios,
-            workflows, artifacts, runtime systems, and evidence in one coordinated environment.
+            EXOTIC is a narrow, safety-first automation layer for authorized bug bounty
+            reconnaissance - not a general scanner, not an exploitation tool. It exists to give
+            security teams and independent researchers continuous authorized coverage without the
+            risk of an over-eager script doing something nobody authorized.
           </p>
 
           <div className="pillarGrid">
@@ -263,8 +265,8 @@ function App() {
         <section className="sectionCard" id="artifacts">
           <div className="sectionHeader">
             <div>
-              <p className="eyebrow">Artifacts</p>
-              <h2>Current EXOTIC implementation surfaces</h2>
+              <p className="eyebrow">Budget</p>
+              <h2>Default ceilings, enforced pre-cycle</h2>
             </div>
             <FolderKanban size={18} />
           </div>
@@ -331,7 +333,7 @@ function App() {
             <button type="button" className="linkCard" onClick={() => navigateTo("https://portal.mingo.center")}>
               <div>
                 <strong>Portal</strong>
-                <p>Authenticated EXOTIC workspace</p>
+                <p>Internal operator workspace, not a customer sign-up</p>
               </div>
               <ChevronRight size={18} />
             </button>
@@ -339,7 +341,7 @@ function App() {
             <button type="button" className="linkCard" onClick={() => navigateTo("https://ops.mingo.center")}>
               <div>
                 <strong>Operations Console</strong>
-                <p>Operational control surface</p>
+                <p>Internal runtime control, not a customer surface</p>
               </div>
               <ChevronRight size={18} />
             </button>

@@ -1,16 +1,16 @@
 const surfaceDefinitions = {
   public: {
     key: "public",
-    productLine: "EXOTIC operating workspace",
+    productLine: "Authorized bug bounty automation",
     identity: "EXOTIC",
-    eyebrow: "Official Public Frontend",
-    title: "EXOTIC is the operating workspace for venture creation, execution, and evidence.",
+    eyebrow: "Authorized Bug Bounty Automation",
+    title: "Continuous bug bounty recon that respects your budget and never leaves scope.",
     description:
-      "Use the public home to explain the EXOTIC platform, show its real system surfaces, and route people into the authenticated workspace and operations layers.",
-    mission: "Public EXOTIC launch",
-    status: "Public home",
-    ctaLabel: "Open portal entry",
-    ctaHref: "https://portal.mingo.center",
+      "EXOTIC runs passive-only reconnaissance against programs you've explicitly attested authorization for - hard daily and monthly dollar ceilings, a global kill switch, and an immutable list of what it will never attempt.",
+    mission: "Authorized, budget-capped recon",
+    status: "Self-owned scope, live",
+    ctaLabel: "See the safety model",
+    ctaHref: "#trust",
   },
   portal: {
     key: "portal",
