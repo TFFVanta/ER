@@ -8,6 +8,8 @@ It turns a broad request into a real venture workspace across ideas, business, p
 
 The system must produce real editable outputs and connected implementations, not just plans or suggestions.
 
+**Status:** this is the vision the architecture is built toward, not a claim that every studio is there yet. Most studios have real code and a real UI but thin content; auto mode's own plan doc describes it as "a disciplined scaffolded execution system, not yet a fully autonomous professional venture builder" (`docs/AUTO_MODE_MASTER_PLAN.md`). The one product with a public pitch and a real safety story today is the [authorized bug bounty runtime](docs/BUG_BOUNTY_RUNTIME.md) - see `docs/EXOTIC_PRODUCT_STRATEGY.md` for what's actually sellable versus what's internal tooling.
+
 ## Getting Started
 
 This directory is the live working tree — clone or pull it, there is nothing to extract.
