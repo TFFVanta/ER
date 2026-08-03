@@ -28,17 +28,14 @@ if (!$SkipPatches) {
         -BundleRoot $bundleRoot
 }
 
-$vcpkgExe = Join-Path $vcpkgRoot "vcpkg.exe"
 $toolchain = $candidateToolchains | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (!$toolchain) {
     throw "vcpkg toolchain not found. Checked: $($candidateToolchains -join ', ')"
 }
-if (Test-Path $vcpkgExe) {
-    & $vcpkgExe install sqlite3:x64-windows
-    if ($LASTEXITCODE -ne 0) {
-        throw "vcpkg install failed with exit code $LASTEXITCODE"
-    }
-}
+# Dependencies are declared in vcpkg.json and installed automatically by the vcpkg toolchain
+# during CMake configure (manifest mode) - no separate `vcpkg install` step needed. Classic
+# mode (a standalone `vcpkg install <pkg>` call) isn't available on every vcpkg distribution
+# (e.g. the one bundled with Visual Studio 2026 has no classic-mode instance at all).
 
 Set-Location $workspaceRoot
 cmake -S . -B out\build\x64-Release `

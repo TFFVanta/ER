@@ -414,7 +414,7 @@ endif()
         $cliText = Get-Content -LiteralPath $cliMain.FullName -Raw
         $newText = $cliText
         if ($newText -notmatch 'exotic/runtime/root_cli_bridge.hpp') {
-            $newText = "#include \"exotic/runtime/root_cli_bridge.hpp\"`r`n" + $newText
+            $newText = "#include `"exotic/runtime/root_cli_bridge.hpp`"`r`n" + $newText
         }
         if ($newText -notmatch 'try_run_runtime_cli') {
             $mainPattern = 'int\s+main\s*\(\s*int\s+(?<argc>[A-Za-z_]\w*)\s*,\s*char\s*(?:\*\s*\*|\*\s*)(?<argv>[A-Za-z_]\w*)(?:\s*\[\s*\])?\s*\)\s*\{'
