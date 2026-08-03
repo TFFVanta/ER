@@ -253,6 +253,16 @@ svg { display: block; }
 .board-list ul { margin: 7px 0 0; padding: 0; list-style: none; }
 .board-list li { color: var(--muted); font-size: 8px; }
 
+.bounty-view { grid-template-rows: minmax(230px, auto) minmax(0, 1fr); }
+.budget-rows { padding: 4px 0; }
+.budget-row { display: grid; grid-template-columns: 92px 1fr auto; align-items: center; gap: 10px; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+.budget-row span { color: var(--muted); font-size: 7px; text-transform: uppercase; letter-spacing: .04em; }
+.budget-row i { display: block; height: 3px; background: var(--line); }
+.budget-row i b { display: block; height: 100%; background: var(--muted); }
+.budget-row.is-near-limit i b { background: var(--white); }
+.budget-row strong { font-size: 8px; font-weight: 500; white-space: nowrap; }
+.budget-row.is-near-limit strong { color: var(--white); font-weight: 700; }
+
 form { min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 15px; overflow: auto; }
 label { display: grid; gap: 6px; color: var(--soft); font-size: 8px; letter-spacing: .06em; }
 label small { color: var(--muted); font-size: 8px; letter-spacing: 0; }

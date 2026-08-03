@@ -35,6 +35,7 @@
     ['roadmap', 'Roadmap', 'roadmap'],
     ['ecosystem', 'Ecosystem', 'network'],
     ['evidence', 'Evidence', 'evidence'],
+    ['bounty', 'Bounty', 'shield'],
     ['board', 'Board', 'board'],
     ['bridge', 'Bridge', 'terminal'],
     ['settings', 'Settings', 'settings']
@@ -48,6 +49,7 @@
     evidence: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6M9 9h2"/>',
     board: '<path d="M4 21V8l8-5 8 5v13M2 21h20M8 21v-7h8v7M8 9h.01M12 9h.01M16 9h.01"/>',
     terminal: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="m7 9 3 3-3 3m6 0h4"/>',
+    shield: '<path d="M12 3 4 6v6c0 4.4 3.2 8.1 8 9 4.8-.9 8-4.6 8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>',
     refresh: '<path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 9m16 6-2 2.5A7 7 0 0 1 5.5 15"/>',
     play: '<path d="m8 5 11 7-11 7Z"/>',
@@ -80,6 +82,7 @@
   const services = () => Array.isArray(bridge().services) ? bridge().services : [];
   const verification = () => bridge().verification || {};
   const board = () => bridge().board || {};
+  const bounty = () => bridge().bounty || {};
 
   function activeStep() {
     return roadmap().find(item => item.status === 'running') || roadmap().find(item => item.status === 'pending') || roadmap()[0] || {};
@@ -215,6 +218,7 @@
       roadmap: roadmapView,
       ecosystem: ecosystemView,
       evidence: evidenceView,
+      bounty: bountyView,
       board: boardView,
       bridge: bridgeView,
       settings: settingsView
@@ -411,6 +415,65 @@
       <div class="evidence-view">
         <section class="module evidence-log">${moduleHead('EXECUTION ACTIVITY', 'Execution Activity')}${executionLog(100)}</section>
         <section class="module evidence-health">${moduleHead('VERIFICATION', 'Evidence-backed state')}${healthBody()}<div class="service-matrix">${services().map(service => `<article><span class="status-dot status-dot--${statusTone(service.status)}"></span><div><strong>${esc(service.label)}</strong><p>${esc(service.detail)}</p></div><small>${esc(service.status)}</small></article>`).join('')}</div></section>
+      </div>
+    `;
+  }
+
+  function budgetRow(label, used, cap, unit = '') {
+    const percent = cap > 0 ? clamp((used / cap) * 100) : 0;
+    return `
+      <div class="budget-row ${percent >= 80 ? 'is-near-limit' : ''}">
+        <span>${esc(label)}</span>
+        <i><b style="width:${percent}%"></b></i>
+        <strong>${esc(typeof used === 'number' ? used.toFixed(unit === '$' ? 2 : 0) : used)}${unit && unit !== '$' ? ` ${unit}` : ''} / ${unit === '$' ? '$' : ''}${cap}${unit && unit !== '$' ? ` ${unit}` : ''}</strong>
+      </div>
+    `;
+  }
+
+  function bountyView() {
+    const runtime = bounty();
+    const safety = runtime.safety || {};
+    const budgets = runtime.budgets || {};
+    const usage = runtime.usage || {};
+    const goals = Array.isArray(runtime.goals) ? runtime.goals : [];
+    const prohibited = Array.isArray(safety.prohibitedActivities) ? safety.prohibitedActivities : [];
+    return `
+      <div class="board-view bounty-view">
+        <section class="module">
+          ${moduleHead('SAFETY STATUS', esc(runtime.status || 'unknown'))}
+          <div class="gate-strip">
+            <div><strong>${safety.killSwitch ? 'ENGAGED' : 'CLEAR'}</strong><span>KILL SWITCH</span></div>
+            <div><strong>${esc(safety.executionPolicy || 'unknown')}</strong><span>EXECUTION POLICY</span></div>
+            <div><strong>${safety.authorizationRequired ? 'REQUIRED' : 'NOT ENFORCED'}</strong><span>AUTHORIZATION</span></div>
+          </div>
+          <div class="health-meta">
+            <div><span>MODE</span><strong>${esc(runtime.mode || 'unknown')}</strong></div>
+            <div><span>SCOPE LOCK</span><strong>${safety.scopeLock ? 'ON' : 'OFF'}</strong></div>
+            <div><span>LAST CYCLE</span><strong>${formatDate(runtime.lastCycleAt)}</strong></div>
+            <div><span>NEXT CYCLE</span><strong>${formatDate(runtime.nextCycleAt)}</strong></div>
+          </div>
+        </section>
+        <section class="module">
+          ${moduleHead('BUDGET USAGE', `RESETS ${esc(usage.day || 'daily')}`)}
+          <div class="budget-rows">
+            ${budgetRow('DAILY SPEND', usage.usdToday || 0, budgets.dailyUsd || 0, '$')}
+            ${budgetRow('MONTHLY SPEND', usage.usdMonth || 0, budgets.monthlyUsd || 0, '$')}
+            ${budgetRow('REQUESTS TODAY', usage.requestsToday || 0, budgets.requestsPerDay || 0)}
+            ${budgetRow('RUNTIME TODAY', usage.runtimeMinutesToday || 0, budgets.runtimeMinutesPerDay || 0, 'MIN')}
+          </div>
+          <div class="health-meta">
+            <div><span>MAX CONCURRENCY</span><strong>${esc(budgets.maxConcurrency ?? 'n/a')}</strong></div>
+            <div><span>REQUEST COST</span><strong>$${esc(budgets.requestCostUsd ?? 0)}</strong></div>
+          </div>
+        </section>
+        <section class="module">
+          ${moduleHead('GOALS', `${goals.length} TRACKED`)}
+          <div class="board-list">${goals.map(goal => `<article><span>${esc(goal.priority || 'normal')}</span><strong>${esc(goal.title)}</strong><p>${esc(goal.metric)} - target ${esc(goal.target)}</p></article>`).join('') || '<div class="empty">No goals configured.</div>'}</div>
+        </section>
+        <section class="module">
+          ${moduleHead('PROHIBITED ACTIVITIES', `${prohibited.length} IMMUTABLE`)}
+          <div class="board-list">${prohibited.map(item => `<article><strong>${esc(item)}</strong></article>`).join('') || '<div class="empty">No prohibited-activity list loaded.</div>'}</div>
+        </section>
       </div>
     `;
   }
@@ -650,7 +713,7 @@
       return;
     }
     if (event.key === 'Escape' && state.commandOpen) { state.commandOpen = false; render(); return; }
-    if (event.altKey && /^[1-8]$/.test(event.key)) { event.preventDefault(); setView(views[Number(event.key) - 1][0]); return; }
+    if (event.altKey && /^[1-9]$/.test(event.key)) { event.preventDefault(); setView(views[Number(event.key) - 1][0]); return; }
     if (event.target.matches('input, textarea, select')) return;
     if (event.key.toLowerCase() === 'r') { event.preventDefault(); refresh(); }
     if (event.code === 'Space') { event.preventDefault(); mutate('/bridge/auto-mode', { mode: automation().mode === 'running' ? 'paused' : 'running' }, 'Auto mode state changed.'); }
