@@ -94,6 +94,38 @@ try {
   const snapshot = await request(baseUrl, '/console/snapshot');
   assert.ok(snapshot.bridge?.mind?.objective, 'Systems Mind objective is missing.');
   assert.ok(snapshot.bridge?.roadmap?.length >= 4, 'Roadmap contract is missing.');
+  assert.equal(snapshot.bridge?.bounty?.mode, 'running');
+  assert.equal(snapshot.bridge?.bounty?.status, 'scope-locked');
+  assert.equal(snapshot.bridge?.bounty?.safety?.scopeLock, true);
+  const bounty = await request(baseUrl, '/bridge/bounty');
+  assert.equal(bounty.gates.allowed, false);
+  assert.ok(bounty.safety.prohibitedActivities.includes('scope-bypass'));
+  const untrustedBountyAccess = await fetch(`${baseUrl}/bridge/bounty`, {
+    headers: { Origin: 'https://untrusted.example' },
+  });
+  assert.equal(untrustedBountyAccess.status, 403);
+  const untrustedBountyAction = await fetch(`${baseUrl}/bridge/bounty/actions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: 'https://untrusted.example',
+    },
+    body: JSON.stringify({ action: 'set-control', value: { mode: 'running' } }),
+  });
+  assert.equal(untrustedBountyAction.status, 403);
+  const bountyBudgets = await request(baseUrl, '/bridge/bounty/actions', {
+    action: 'update-budgets',
+    value: {
+      dailyUsd: 3,
+      monthlyUsd: 60,
+      requestsPerMinute: 10,
+      requestsPerDay: 300,
+      runtimeMinutesPerDay: 30,
+      maxConcurrency: 2,
+    },
+  });
+  assert.equal(bountyBudgets.snapshot.budgets.dailyUsd, 3);
+  assert.equal(bountyBudgets.snapshot.status, 'scope-locked');
   const initialProgress = snapshot.bridge.roadmap.find((item) => item.id === 'P1-01')?.progress;
   await new Promise((resolve) => setTimeout(resolve, 450));
   const tickSnapshot = await request(baseUrl, '/console/snapshot');
@@ -120,6 +152,56 @@ try {
   );
   assert.ok(migratedWorkspace.tasks.every((task) => implementedTasks.has(task.taskId)));
   assert.ok(migratedWorkspace.tasks.every((task) => producingTasks.has(task.taskId)));
+
+  const bootstrapRequest = 'Build a professional field operations software venture';
+  const preview = await request(baseUrl, '/bridge/workspace/bootstrap', {
+    mode: 'preview',
+    request: bootstrapRequest,
+    operator: 'runtime-verifier',
+    ventureName: 'Field Operations Cloud',
+    ventureType: 'software-product',
+  });
+  assert.equal(preview.mode, 'preview');
+  assert.equal(preview.persisted, false);
+  assert.equal(preview.summary.requiredOutputs, 13);
+  assert.equal(preview.summary.studios, 10);
+  const workspaceAfterPreview = await request(baseUrl, '/bridge/workspace');
+  assert.equal(
+    workspaceAfterPreview.venture.ventureId,
+    migratedWorkspace.venture.ventureId,
+    'Preview replaced the persisted workspace.',
+  );
+
+  const unconfirmedCommit = await fetch(`${baseUrl}/bridge/workspace/bootstrap`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mode: 'commit',
+      request: bootstrapRequest,
+      operator: 'runtime-verifier',
+      ventureName: 'Field Operations Cloud',
+      ventureType: 'software-product',
+    }),
+  });
+  assert.equal(unconfirmedCommit.status, 409);
+
+  const committedBootstrap = await request(baseUrl, '/bridge/workspace/bootstrap', {
+    mode: 'commit',
+    request: bootstrapRequest,
+    operator: 'runtime-verifier',
+    ventureName: 'Field Operations Cloud',
+    ventureType: 'software-product',
+    replaceExisting: true,
+  });
+  assert.equal(committedBootstrap.persisted, true);
+  assert.equal(committedBootstrap.workspace.venture.thesis, bootstrapRequest);
+  assert.equal(committedBootstrap.state.autoMode, 'paused');
+  assert.ok(committedBootstrap.archivePath);
+  assert.equal(fs.readdirSync(path.join(bridgeRoot, 'workspace-archive')).length, 1);
+  assert.ok(fs.readdirSync(workspaceRoot).length > 0, 'Bootstrap did not materialize workspace files.');
+  const persistedBootstrap = await request(baseUrl, '/bridge/workspace');
+  assert.equal(persistedBootstrap.venture.ventureId, committedBootstrap.workspace.venture.ventureId);
+  assert.equal(persistedBootstrap.outputManifest.length, 13);
 
   const note = await request(baseUrl, '/bridge/message', {
     author: 'runtime-verifier',

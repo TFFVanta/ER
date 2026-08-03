@@ -7,7 +7,7 @@ apps/desktop/bridge/
 .env
 PORTAL/data/config.json
 PORTAL/data/portal.log
-Exotic/
+exotic-native/
 .exotic/
 .vs/
 build/

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import erLogo from "../../../exotic-operations-console-v1.0/public/er-logo-reference.png";
+import erLogo from "../../../operations-console/public/er-logo-reference.png";
 import "./App.css";
 import {
   buildWorkspaceModel,
@@ -1041,7 +1041,7 @@ function OfflineScreen({ error, onRetry }) {
         {error ||
           "Start the operations bridge to load the canonical venture workspace."}
       </p>
-      <code>npm --prefix exotic-operations-console-v1.0 run codex:live</code>
+      <code>npm --prefix operations-console run codex:live</code>
       <button type="button" onClick={onRetry}>
         RETRY CONNECTION
       </button>

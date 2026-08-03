@@ -7,7 +7,7 @@ function finding(level, message) {
   return { level, message };
 }
 
-// Mirrors exotic-operations-console-v1.0/scripts/codex-bridge-runtime.mjs's
+// Mirrors operations-console/scripts/codex-bridge-runtime.mjs's
 // matchingTaskId()/recordRoadmapEvidence() lane-matching, so a roadmap step resolves to the
 // same task here as it does when the bridge actually records evidence for it.
 function matchingTaskId(workspace, step) {

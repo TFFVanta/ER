@@ -78,7 +78,7 @@ const artifactCards = [
   {
     title: "Operations Console v1.0",
     detail: "Dedicated operations console implementation for runtime oversight and control.",
-    source: "exotic-operations-console-v1.0/",
+    source: "operations-console/",
   },
   {
     title: "Continuous Operations Runtime v1.0",

@@ -938,7 +938,7 @@ function workerHelp() {
 }
 
 // Roadmap steps map to venture-workspace tasks by studio lane - see
-// exotic-operations-console-v1.0/scripts/codex-bridge-runtime.mjs's recordRoadmapEvidence(),
+// operations-console/scripts/codex-bridge-runtime.mjs's recordRoadmapEvidence(),
 // which this mirrors so a step completed via this CLI and one completed via the bridge's
 // HTTP API produce the same evidence-record shape.
 function matchingTaskId(workspace, step) {

@@ -87,8 +87,8 @@ Two real desktop shells exist, wrapping different UIs - not duplicates:
 
 - `apps/desktop` - the official EXOTIC desktop app: the Studio workspace shell with an
   in-process Codex bridge. `npm run start --workspace=@exotic/desktop`.
-- `exotic-operations-console-v1.0/desktop` - the Operations Console shell (control plane, not
-  Studio). `npm run desktop --prefix exotic-operations-console-v1.0`.
+- `operations-console/desktop` - the Operations Console shell (control plane, not
+  Studio). `npm run desktop --prefix operations-console`.
 
-`Exotic/EXOTIC-Native` is a separate native C++ GUI belonging to the C++ track (see
-`Exotic/`), built and launched through the Phone Portal above, not through npm.
+`exotic-native/EXOTIC-Native` is a separate native C++ GUI belonging to the C++ track (see
+`exotic-native/`), built and launched through the Phone Portal above, not through npm.

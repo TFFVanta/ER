@@ -61,13 +61,13 @@ const testResults = workspaces
   .filter(w => w.manifest.scripts?.test)
   .map(w => runScript(w, 'test'));
 
-const consoleDir = path.join(repoRoot, 'exotic-operations-console-v1.0');
+const consoleDir = path.join(repoRoot, 'operations-console');
 const consoleManifestPath = path.join(consoleDir, 'package.json');
 let consoleResult = { passed: true, skipped: true };
 if (fs.existsSync(consoleManifestPath)) {
   const consoleManifest = JSON.parse(fs.readFileSync(consoleManifestPath, 'utf8'));
   if (consoleManifest.scripts?.verify) {
-    const r = runScript({ dir: consoleDir, name: 'exotic-operations-console-v1.0' }, 'verify');
+    const r = runScript({ dir: consoleDir, name: 'operations-console' }, 'verify');
     consoleResult = { passed: r.passed, exitCode: r.exitCode, skipped: false, ...(r.output ? { output: r.output } : {}) };
   }
 }

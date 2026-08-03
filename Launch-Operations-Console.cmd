@@ -1,5 +1,5 @@
 @echo off
 setlocal
-cd /d "%~dp0exotic-operations-console-v1.0"
+cd /d "%~dp0operations-console"
 call Launch-Codex-Bridge-Console.cmd
 endlocal

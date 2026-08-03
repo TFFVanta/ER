@@ -1,6 +1,6 @@
 # Build Instructions
 
-From `C:\Projects\Exotic\exotic-phase1`:
+From `C:\Projects\Exotic\exotic-runtime`:
 
 ```powershell
 cmake -S . -B build

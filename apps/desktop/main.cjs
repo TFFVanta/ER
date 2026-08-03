@@ -25,7 +25,7 @@ async function startBridgeRuntime() {
         __dirname,
         '..',
         '..',
-        'exotic-operations-console-v1.0',
+        'operations-console',
         'scripts',
         'codex-bridge-runtime.mjs',
       )

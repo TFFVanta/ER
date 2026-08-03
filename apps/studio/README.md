@@ -15,7 +15,7 @@ npm run dev --workspace=@exotic/studio
 Start the bridge first with:
 
 ```powershell
-npm --prefix exotic-operations-console-v1.0 run codex:live
+npm --prefix operations-console run codex:live
 ```
 
 Set `VITE_EXOTIC_BRIDGE_URL` when the bridge is not available at `http://127.0.0.1:8787`.

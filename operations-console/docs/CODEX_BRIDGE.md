@@ -11,7 +11,7 @@ The Codex bridge turns the operations console into a live observer for EXOTIC bu
 
 ## Start it
 
-From `C:\Projects\Exotic\exotic-operations-console-v1.0`:
+From `C:\Projects\Exotic\operations-console`:
 
 ```bat
 START-CODEX-BUILD-CONSOLE.cmd

@@ -2,7 +2,7 @@
 
 These five folders were previously scattered at the JS monorepo root
 (`C:\Projects\Exotic`). They are C++ patch bundles and an installer targeting
-**this** project (`exotic-phase1/`, "Exotic Runtime + Portal v0.4") — its
+**this** project (`exotic-runtime/`, "Exotic Runtime + Portal v0.4") — its
 `src/exotic/autonomy/{agents,governance,persistence,resources,scheduler}` and
 `src/exotic/runtime` layout is what `EXOTIC-Live-Integrator-v1.0` and the four
 version bundles (v0.3–v1.0) expect to patch. They were moved here, unmodified,
@@ -24,7 +24,7 @@ file copy. Run it deliberately when ready, with the corrected workspace path
 (its packaged default of `C:\Projects\Exotic` is stale from before this move):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\EXOTIC-Live-Integrator-v1.0\Install-EXOTIC-v1.ps1 -Workspace C:\Projects\Exotic\exotic-phase1 -BootstrapVcpkg
+powershell -NoProfile -ExecutionPolicy Bypass -File .\EXOTIC-Live-Integrator-v1.0\Install-EXOTIC-v1.ps1 -Workspace C:\Projects\Exotic\exotic-runtime -BootstrapVcpkg
 ```
 
 See `EXOTIC-Live-Integrator-v1.0/README.md` for what it does step by step, and

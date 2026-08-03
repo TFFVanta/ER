@@ -7,12 +7,12 @@ The EXOTIC autonomous machine is exposed through the existing runtime CLI surfac
 From `C:\Projects\Exotic` after building:
 
 ```powershell
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous init --workspace C:\Projects\Exotic
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous start --workspace C:\Projects\Exotic
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous run-once --workspace C:\Projects\Exotic
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous status --workspace C:\Projects\Exotic
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous review --workspace C:\Projects\Exotic
-exotic-phase1\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous stop --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous init --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous start --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous run-once --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous status --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous review --workspace C:\Projects\Exotic
+exotic-runtime\out\build\x64-Release\Release\exotic-runtime-cli.exe autonomous stop --workspace C:\Projects\Exotic
 ```
 
 ## State

@@ -14,9 +14,11 @@
   --rail-inspector: 284px;
   --topbar: 44px;
   --statusbar: 27px;
+  --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Code", "IBM Plex Mono", Consolas, monospace;
   color: var(--white);
   background: var(--black);
-  font-family: "Cascadia Code", "IBM Plex Mono", Consolas, monospace;
+  font-family: var(--font);
   font-size: 12px;
   font-synthesis: none;
 }
@@ -27,7 +29,7 @@ body { background: var(--black); color: var(--white); }
 button, input, textarea, select { color: inherit; font: inherit; }
 button { border: 0; cursor: pointer; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 1px solid var(--white); outline-offset: -1px; }
-code, kbd { font-family: inherit; }
+code, kbd { font-family: var(--font-mono); }
 svg { display: block; }
 
 ::-webkit-scrollbar { width: 7px; height: 7px; }
@@ -43,7 +45,7 @@ svg { display: block; }
 .topbar { min-width: 0; display: flex; align-items: stretch; border-bottom: 1px solid var(--line-strong); background: var(--black); }
 .brand { width: calc(var(--rail-icons) + var(--rail-explorer)); min-width: calc(var(--rail-icons) + var(--rail-explorer)); display: flex; align-items: center; gap: 11px; padding: 0 13px 0 8px; border-right: 1px solid var(--line-strong); background: transparent; text-align: left; }
 .brand img { width: 42px; height: 30px; object-fit: contain; }
-.brand strong { font-family: Bahnschrift, "Arial Narrow", sans-serif; font-size: 16px; letter-spacing: .17em; }
+.brand strong { font-size: 16px; font-weight: 600; letter-spacing: .17em; }
 .brand span { margin-left: auto; color: var(--muted); font-size: 9px; letter-spacing: .12em; }
 .topbar__context { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .topbar__context strong { color: var(--white); font-weight: 500; }
@@ -97,7 +99,7 @@ svg { display: block; }
 .objective-bar span { display: block; color: var(--muted); font-size: 8px; letter-spacing: .08em; }
 .objective-bar__title strong { display: block; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
 .objective-bar__progress > div { display: grid; grid-template-columns: 43px 1fr; align-items: center; gap: 7px; margin-top: 5px; }
-.objective-bar__progress strong { font-family: Bahnschrift, sans-serif; font-size: 22px; font-weight: 400; }
+.objective-bar__progress strong { font-size: 22px; font-weight: 600; }
 .objective-bar__progress i { height: 7px; border: 1px solid var(--line-strong); }
 .objective-bar__progress b { display: block; height: 100%; background: var(--white); }
 .objective-bar__control { display: flex; align-items: center; gap: 8px; padding: 9px 11px !important; }
@@ -184,7 +186,7 @@ svg { display: block; }
 .graph-links line { stroke: #616161; stroke-width: 1; stroke-dasharray: 2 2; }
 .graph-node { cursor: pointer; }
 .graph-node rect { fill: var(--black); stroke: #666; stroke-width: 1; }
-.graph-node text { fill: var(--soft); font-family: "Cascadia Code", monospace; font-size: 7px; pointer-events: none; }
+.graph-node text { fill: var(--soft); font-family: var(--font-mono); font-size: 7px; pointer-events: none; }
 .graph-node .graph-node__progress { fill: var(--muted); font-size: 6px; }
 .graph-node:hover rect, .graph-node.is-selected rect { fill: var(--white); stroke: var(--white); }
 .graph-node:hover text, .graph-node.is-selected text { fill: var(--black); }
@@ -238,7 +240,7 @@ svg { display: block; }
 .board-view { width: 100%; height: 100%; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 165px minmax(0, 1fr); gap: 1px; background: var(--line-strong); }
 .board-view .module { background: var(--black); }
 .board-summary { padding-bottom: 10px; }
-.board-summary > p { margin: 13px; color: var(--soft); font-family: Bahnschrift, sans-serif; font-size: 17px; line-height: 1.35; }
+.board-summary > p { margin: 13px; color: var(--soft); font-size: 17px; font-weight: 600; line-height: 1.35; }
 .board-summary > div { margin: auto 13px 0; }
 .board-summary > div span, .board-summary > div strong { display: block; }
 .board-summary > div span { color: var(--muted); font-size: 8px; }
@@ -314,18 +316,18 @@ select { appearance: none; }
 
 .loading-state { width: 100%; height: 100%; display: grid; place-content: center; justify-items: center; gap: 10px; }
 .loading-state img { width: 120px; }
-.loading-state strong { font-family: Bahnschrift, sans-serif; font-size: 13px; letter-spacing: .18em; }
+.loading-state strong { font-size: 13px; font-weight: 600; letter-spacing: .18em; }
 .loading-state span { color: var(--muted); font-size: 8px; }
 .loading-state i { width: 240px; height: 1px; overflow: hidden; background: var(--line); }
 .loading-state i::after { content: ""; display: block; width: 50%; height: 1px; background: var(--white); animation: scan 1.2s linear infinite; }
 @keyframes scan { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
 
-.sleep-screen { position: fixed; inset: 0; z-index: 200; overflow: hidden; background: #000; cursor: none; }
-.sleep-screen img { position: absolute; width: 150px; animation: bounceScreen 15s linear infinite alternate; }
+.sleep-screen { position: fixed; inset: 0; z-index: 200; overflow: hidden; background: #000; cursor: none; display: grid; place-items: center; }
+.sleep-screen img { width: 150px; animation: idleBreathe 6s ease-in-out infinite; }
 .sleep-screen > div { position: absolute; left: 18px; bottom: 16px; display: grid; gap: 4px; }
 .sleep-screen strong { font-size: 9px; letter-spacing: .12em; }
 .sleep-screen span { color: var(--muted); font-size: 8px; }
-@keyframes bounceScreen { 0% { left: 2%; top: 4%; } 28% { left: 82%; top: 22%; } 55% { left: 44%; top: 75%; } 78% { left: 4%; top: 45%; } 100% { left: 82%; top: 75%; } }
+@keyframes idleBreathe { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
 
 #toast-root { position: fixed; right: 12px; bottom: 38px; z-index: 300; display: grid; gap: 5px; pointer-events: none; }
 .toast { width: min(340px, calc(100vw - 24px)); padding: 9px 11px; border: 1px solid var(--line-strong); background: var(--black); color: var(--white); font-size: 9px; box-shadow: 0 10px 30px #000; animation: toastIn 160ms ease-out; }

@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 // ...) are left as external automatically by platform: 'node'.
 const desktopRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = path.resolve(desktopRoot, '..', '..');
-const scriptsDir = path.join(repoRoot, 'exotic-operations-console-v1.0', 'scripts');
+const scriptsDir = path.join(repoRoot, 'operations-console', 'scripts');
 const liveEntry = path.join(scriptsDir, 'codex-bridge-runtime.mjs');
 const outfile = path.join(desktopRoot, 'bridge', 'codex-bridge-runtime.bundle.mjs');
 
@@ -27,6 +27,9 @@ const outfile = path.join(desktopRoot, 'bridge', 'codex-bridge-runtime.bundle.mj
 const PINNED_BRIDGE_REF = process.env.EXOTIC_BRIDGE_PIN || 'a27e258';
 
 function extractPinnedEntry() {
+  // Intentionally the pre-rename path: this reads the file as it existed at
+  // PINNED_BRIDGE_REF, a commit from before operations-console/ was renamed from
+  // exotic-operations-console-v1.0/ - that historical ref only has the old path.
   const content = execFileSync(
     'git',
     ['show', `${PINNED_BRIDGE_REF}:exotic-operations-console-v1.0/scripts/codex-bridge-runtime.mjs`],
