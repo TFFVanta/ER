@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   appendEvidenceRecord,
   createVentureWorkspace,
@@ -11,13 +11,27 @@ import {
   summarizeWorkspace,
 } from "../../packages/entity/dist/index.js";
 import { ventureWorkspaceContract } from "../../packages/contracts/dist/index.js";
-import { dispatchStep } from "../../packages/codex-worker/dist/index.js";
+import {
+  DEV_ADMIN_IDENTITY,
+  DevAdminLeaseStore,
+  cleanupIsolatedExecution,
+  createIsolatedExecution,
+  dispatchStep,
+  ensureDevAdminCredentials,
+  integrateIsolatedExecution,
+  runCommandForEvidence,
+  verifyDevAdminToken,
+} from "../../packages/codex-worker/dist/index.js";
 import { composeRoadmap } from "../../packages/pattern-composer/dist/index.js";
+import { ventureTypes } from "../../packages/types/dist/index.js";
+import { createBountyRuntime } from "./bounty-runtime.mjs";
 
-// Which backend the auto-tick loop dispatches ready steps to. "claude"/"codex" require the
-// matching CLI on PATH; "local" requires EXOTIC_LOCAL_MODEL_ENDPOINT. See
+// Which backend the auto-tick loop dispatches ready steps to. Defaults to "local" so auto
+// mode runs offline and free out of the box - it requires EXOTIC_LOCAL_MODEL_ENDPOINT
+// pointing at a self-hosted OpenAI-compatible server (e.g. Ollama). "claude"/"codex" require
+// the matching paid CLI on PATH instead; set EXOTIC_WORKER_BACKEND to use them. See
 // packages/codex-worker/src/backends.ts.
-const workerBackendName = process.env.EXOTIC_WORKER_BACKEND || "codex";
+const workerBackendName = process.env.EXOTIC_WORKER_BACKEND || "local";
 
 const consoleRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -48,6 +62,19 @@ const roadmapFallbackFile = path.join(dist, "roadmap.json");
 const inboxFallbackFile = path.join(dist, "bridge-inbox.ndjson");
 const operatorLogFallbackFile = path.join(dist, "operator-notes.md");
 const workspaceFile = path.join(bridgeRoot, "venture-workspace.json");
+const workspaceArchiveRoot = path.join(bridgeRoot, "workspace-archive");
+const devAdminRoot = path.join(bridgeRoot, "dev-admin");
+const devAdminCredentialFile = path.join(devAdminRoot, "credentials.json");
+const devAdminLeaseFile = path.join(devAdminRoot, "lease.json");
+const devAdminReceiptFile = path.join(devAdminRoot, "last-receipt.json");
+// Git must not create a linked worktree inside another worktree. Keeping disposable
+// candidates in the OS temp area prevents a cleanup or interrupted checkout from ever
+// being interpreted as part of the operator's live EXOTIC checkout.
+const devAdminWorktreeRoot = path.join(
+  os.tmpdir(),
+  "exotic-dev-admin-worktrees",
+  path.basename(repoRoot),
+);
 const workspaceFallbackFile = path.join(
   consoleRoot,
   "dist",
@@ -84,6 +111,59 @@ const requestedSwarmConcurrency = Number(
 const swarmConcurrency = Number.isFinite(requestedSwarmConcurrency)
   ? Math.max(1, Math.min(16, Math.floor(requestedSwarmConcurrency)))
   : 4;
+const devAdminCredentials = ensureDevAdminCredentials(devAdminCredentialFile);
+const devAdminLeaseStore = new DevAdminLeaseStore(
+  devAdminLeaseFile,
+  Number(process.env.EXOTIC_DEV_ADMIN_LEASE_MS || 30 * 60 * 1000),
+);
+let lastDevAdminRecovery = devAdminLeaseStore.recoverExpired();
+
+function readDevAdminReceipt() {
+  return readJson(devAdminReceiptFile, null);
+}
+
+function devAdminStatus() {
+  const lease = devAdminLeaseStore.read();
+  return {
+    identity: DEV_ADMIN_IDENTITY,
+    status: lease ? lease.status : readBridgeState().autoMode === "paused" ? "paused" : "ready",
+    isolatedExecution: true,
+    watchdog: {
+      healthy: !lease || Date.parse(lease.expiresAt) > Date.now(),
+      lease,
+      lastRecovery: lastDevAdminRecovery,
+    },
+    authority: {
+      localWorkspaceWrite: true,
+      verificationRequired: true,
+      conflictProtection: true,
+      remotePush: false,
+      deployment: false,
+      secrets: false,
+      financialActions: false,
+    },
+    lastReceipt: readDevAdminReceipt(),
+  };
+}
+
+function requestDevAdminToken(req) {
+  const authorization = String(req.headers.authorization || "");
+  if (authorization.startsWith("Bearer ")) return authorization.slice(7).trim();
+  return typeof req.headers["x-exotic-admin-token"] === "string"
+    ? req.headers["x-exotic-admin-token"]
+    : undefined;
+}
+
+function isDevAdminAuthorized(req) {
+  return isTrustedLocalBridgeOrigin(req) && verifyDevAdminToken(
+    devAdminCredentials.token,
+    requestDevAdminToken(req),
+  );
+}
+const bountyTickMs = Number(
+  process.env.EXOTIC_BOUNTY_TICK_MS || 60000,
+);
+const bountyRuntime = createBountyRuntime({ root: bridgeRoot });
 
 function ensureBridgeFiles() {
   fs.mkdirSync(bridgeRoot, { recursive: true });
@@ -562,6 +642,124 @@ function writeWorkspacePayload(workspace) {
     fs.writeFileSync(workspaceFallbackFile, payload);
     return workspaceFallbackFile;
   }
+}
+
+function normalizeBootstrapPayload(payload) {
+  const mode = payload.mode;
+  if (mode !== "preview" && mode !== "commit") {
+    throw new Error('Bootstrap mode must be either "preview" or "commit".');
+  }
+  const request = typeof payload.request === "string" ? payload.request.trim() : "";
+  if (request.length < 12 || request.length > 4000) {
+    throw new Error("Venture request must contain between 12 and 4000 characters.");
+  }
+  const operator = typeof payload.operator === "string" ? payload.operator.trim() : "";
+  if (!operator || operator.length > 120) {
+    throw new Error("Operator is required and must not exceed 120 characters.");
+  }
+  const ventureName =
+    typeof payload.ventureName === "string" ? payload.ventureName.trim() : "";
+  if (ventureName && (ventureName.length < 2 || ventureName.length > 120)) {
+    throw new Error("Venture name must contain between 2 and 120 characters.");
+  }
+  const ventureType = payload.ventureType || "business";
+  if (!ventureTypes.includes(ventureType)) {
+    throw new Error(`Unsupported venture type: ${ventureType}`);
+  }
+  return {
+    mode,
+    request,
+    operator,
+    ventureName: ventureName || undefined,
+    ventureType,
+    replaceExisting: payload.replaceExisting === true,
+  };
+}
+
+function workspaceBootstrapSummary(workspace) {
+  return {
+    ventureId: workspace.venture.ventureId,
+    ventureName: workspace.venture.name,
+    ventureType: workspace.venture.type,
+    objectives: workspace.objectives.length,
+    studios: workspace.studioScopes.length,
+    tasks: workspace.tasks.length,
+    artifacts: workspace.artifacts.length,
+    approvals: workspace.approvals.length,
+    evidence: workspace.evidenceRecords.length,
+    graphEdges: workspace.graphEdges.length,
+    requiredOutputs: workspace.outputManifest.length,
+  };
+}
+
+function archiveWorkspace(workspace, archivedAt) {
+  fs.mkdirSync(workspaceArchiveRoot, { recursive: true });
+  const timestamp = archivedAt.replace(/[:.]/g, "-");
+  const archiveFile = path.join(
+    workspaceArchiveRoot,
+    `${timestamp}-${slugify(workspace.venture.ventureId)}.json`,
+  );
+  fs.writeFileSync(archiveFile, JSON.stringify(workspace, null, 2));
+  return path.relative(repoRoot, archiveFile).replaceAll("\\", "/");
+}
+
+function bootstrapVentureWorkspace(payload) {
+  const input = normalizeBootstrapPayload(payload);
+  const generatedAt = new Date().toISOString();
+  const workspace = createVentureWorkspace({
+    request: input.request,
+    operator: input.operator,
+    ventureName: input.ventureName,
+    ventureType: input.ventureType,
+    now: generatedAt,
+  });
+  const summary = workspaceBootstrapSummary(workspace);
+  if (input.mode === "preview") {
+    return { ok: true, mode: "preview", persisted: false, summary, workspace };
+  }
+
+  ensureBridgeFiles();
+  const currentWorkspace = ensureWorkspaceFile();
+  if (currentWorkspace && !input.replaceExisting) {
+    const error = new Error(
+      "A venture workspace already exists. Confirm replaceExisting to archive it and commit this bootstrap.",
+    );
+    error.code = "WORKSPACE_REPLACEMENT_CONFIRMATION_REQUIRED";
+    throw error;
+  }
+
+  const archivePath = currentWorkspace
+    ? archiveWorkspace(currentWorkspace, generatedAt)
+    : null;
+  writeWorkspace(workspace);
+  const state = writeBridgeState({
+    title: workspace.venture.name,
+    summary: summarizeWorkspace(workspace),
+    initialRequest: input.request,
+    autoMode: "paused",
+    status: "paused",
+    blockers: [],
+    executionIntent: null,
+    executionFabric: null,
+    nextStep:
+      "Review the generated venture workspace, approve its foundation decision, and attach P1-04 verification evidence.",
+    lastCodexUpdate: `Venture workspace ${workspace.venture.ventureId} generated from an operator request and paused for review.`,
+  });
+  materializeWorkspace(workspace, readRoadmap(), state);
+  appendOperatorNote({
+    author: input.operator,
+    kind: "workspace-bootstrap",
+    message: `Committed ${workspace.venture.ventureId} from the request "${input.request}". Previous workspace archive: ${archivePath || "none"}.`,
+  });
+  return {
+    ok: true,
+    mode: "commit",
+    persisted: true,
+    archivePath,
+    summary,
+    workspace,
+    state,
+  };
 }
 
 function workspaceStoragePath() {
@@ -2407,6 +2605,8 @@ function buildSnapshot() {
           : "EXOTIC is intentionally paused and waiting for operator resume.",
       updatedAt: state.updatedAt || now,
     },
+    devAdmin: devAdminStatus(),
+    bounty: bountyRuntime.snapshot(),
     productionFabric,
     execution:
       state.executionIntent ||
@@ -2543,6 +2743,21 @@ function json(res, code, value) {
     "Cache-Control": "no-store",
   });
   res.end(JSON.stringify(value));
+}
+
+function isTrustedLocalBridgeOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin || origin === "null") return true;
+  try {
+    const hostname = new URL(origin).hostname.replace(/^\[|\]$/g, "");
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    );
+  } catch {
+    return false;
+  }
 }
 
 function appendOperatorNote(payload) {
@@ -2770,6 +2985,7 @@ function findBlocker(state, stepId) {
 // executionIntent prompt and then stop, so nothing ever advanced past 0%.
 async function dispatchActiveStep(step) {
   dispatchInFlight = true;
+  let execution = null;
   try {
     const state = readBridgeState();
     const existingBlocker = findBlocker(state, step.id);
@@ -2780,24 +2996,85 @@ async function dispatchActiveStep(step) {
       return; // exhausted retries - left for the operator, not silently retried forever
     }
 
-    const result = await dispatchStep(
+    execution = createIsolatedExecution(repoRoot, devAdminWorktreeRoot, step.id);
+    devAdminLeaseStore.acquire({
+      executionId: execution.executionId,
+      stepId: step.id,
+      branch: execution.branch,
+      worktreePath: execution.worktreePath,
+      status: "running",
+      attempt: (existingBlocker?.attempts || 0) + 1,
+    });
+    const heartbeatTimer = setInterval(() => {
+      try { devAdminLeaseStore.heartbeat(execution.executionId); } catch { /* The dispatch handles a lost lease when it completes. */ }
+    }, 30_000);
+    let result;
+    try {
+      result = await dispatchStep(
       {
         id: step.id,
         title: step.title,
         lane: step.lane,
         dependsOn: step.dependsOn,
       },
-      { backend: workerBackendName, cwd: repoRoot },
-    );
+      { backend: workerBackendName, cwd: execution.worktreePath },
+      );
+    } finally {
+      clearInterval(heartbeatTimer);
+    }
     if (result.status === "completed") {
-      consecutiveDispatchFailures = 0;
-      updateRoadmapItem({
-        id: step.id,
-        status: "completed",
-        progress: 100,
-        evidence: result.receipt.evidence,
+      devAdminLeaseStore.heartbeat(execution.executionId, "verifying");
+      const verification = runCommandForEvidence(
+        execution.worktreePath,
+        process.platform === "win32" ? "npm.cmd" : "npm",
+        ["test"],
+      );
+      if (!verification.passed) {
+        result = { status: "failed", error: `Verification gate failed: ${verification.summary}` };
+      } else {
+        devAdminLeaseStore.heartbeat(execution.executionId, "integrating");
+        const integration = integrateIsolatedExecution(repoRoot, execution);
+        const accepted = integration.integrated.length > 0 && integration.blocked.length === 0 && integration.conflicts.length === 0;
+        const receipt = {
+          executionId: execution.executionId,
+          stepId: step.id,
+          branch: execution.branch,
+          completedAt: new Date().toISOString(),
+          verification,
+          integration,
+          accepted,
+          remotePush: false,
+        };
+        writeJsonWithFallback(devAdminReceiptFile, devAdminReceiptFile, receipt);
+        if (accepted) {
+          consecutiveDispatchFailures = 0;
+          updateRoadmapItem({
+            id: step.id,
+            status: "completed",
+            progress: 100,
+            evidence: [...result.receipt.evidence, `verified: ${verification.summary}`, ...integration.integrated.map((item) => `integrated: ${item}`)],
+          });
+          return;
+        }
+        result = {
+          status: "failed",
+          error: `Integration gate rejected the candidate (integrated=${integration.integrated.length}, blocked=${integration.blocked.length}, conflicts=${integration.conflicts.length}).`,
+        };
+      }
+    }
+    if (result.status === "failed") {
+      writeJsonWithFallback(devAdminReceiptFile, devAdminReceiptFile, {
+        executionId: execution.executionId,
+        stepId: step.id,
+        branch: execution.branch,
+        completedAt: new Date().toISOString(),
+        accepted: false,
+        error: result.error,
+        remotePush: false,
       });
-    } else {
+    }
+    if (result.status !== "completed") {
+      // Keep the existing retry/backoff behavior, now backed by an isolated execution receipt.
       consecutiveDispatchFailures += 1;
       const attempts = (existingBlocker?.attempts || 0) + 1;
       const exhausted = attempts >= workerMaxRetries;
@@ -2806,17 +3083,11 @@ async function dispatchActiveStep(step) {
       writeBridgeState({
         blockers: [
           ...blockers.filter((blocker) => blocker.stepId !== step.id),
-          {
-            stepId: step.id,
-            reason: result.error,
-            attempts,
-            retryAfter: exhausted ? null : new Date(Date.now() + backoffMs).toISOString(),
-            recordedAt: new Date().toISOString(),
-          },
+          { stepId: step.id, reason: result.error, attempts, retryAfter: exhausted ? null : new Date(Date.now() + backoffMs).toISOString(), recordedAt: new Date().toISOString() },
         ],
         lastCodexUpdate: exhausted
-          ? `Worker dispatch for ${step.id} (${workerBackendName}) failed ${attempts} times and will not auto-retry: ${result.error}`
-          : `Worker dispatch for ${step.id} (${workerBackendName}) did not produce evidence (attempt ${attempts}/${workerMaxRetries}, retrying later): ${result.error}`,
+          ? `AI Dev Admin rejected ${step.id} after ${attempts} attempts: ${result.error}`
+          : `AI Dev Admin candidate for ${step.id} failed a governed gate (attempt ${attempts}/${workerMaxRetries}): ${result.error}`,
       });
     }
   } catch (error) {
@@ -2826,6 +3097,10 @@ async function dispatchActiveStep(step) {
       lastCodexUpdate: `Worker dispatch for ${step.id} (${workerBackendName}) crashed: ${message}`,
     });
   } finally {
+    if (execution) {
+      devAdminLeaseStore.release(execution.executionId);
+      cleanupIsolatedExecution(repoRoot, execution);
+    }
     dispatchInFlight = false;
   }
 }
@@ -2876,6 +3151,7 @@ const server = http.createServer((req, res) => {
     // that. tickAgeMs > 2x the idle-backoff ceiling means it's missed at least one full cycle.
     const tickAgeMs = lastTickAt ? Date.now() - new Date(lastTickAt).getTime() : null;
     const autoModeNow = readBridgeState().autoMode;
+    const bounty = bountyRuntime.snapshot();
     return json(res, 200, {
       ok: true,
       runtime: "EXOTIC Codex Bridge Runtime",
@@ -2886,14 +3162,169 @@ const server = http.createServer((req, res) => {
       tickAgeMs,
       stale: autoModeNow !== "paused" && (tickAgeMs === null || tickAgeMs > 2 * autoTickMs),
       consecutiveDispatchFailures,
+      bounty: {
+        status: bounty.status,
+        heartbeatAt: bounty.heartbeatAt,
+        nextCycleAt: bounty.nextCycleAt,
+        scopeLocked: !bounty.gates.allowed && bounty.status === "scope-locked",
+        killSwitch: bounty.safety.killSwitch,
+      },
     });
   }
   if (url.pathname === "/api/v1/console/snapshot")
     return json(res, 200, buildSnapshot());
   if (url.pathname === "/api/v1/bridge/state")
     return json(res, 200, buildSnapshot().bridge);
+  if (url.pathname === "/api/v1/bridge/dev-admin" && req.method === "GET")
+    return json(res, 200, devAdminStatus());
+  if (url.pathname === "/api/v1/bridge/dev-admin/actions" && req.method === "POST") {
+    if (!isDevAdminAuthorized(req)) {
+      return json(res, 401, { ok: false, message: "AI Dev Admin authentication required." });
+    }
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      let payload = {};
+      try { payload = body ? JSON.parse(body) : {}; } catch { return json(res, 400, { ok: false, message: "Invalid JSON payload." }); }
+      if (payload.action === "start") setAutoMode("running");
+      else if (payload.action === "pause") setAutoMode("paused");
+      else if (payload.action === "recover") lastDevAdminRecovery = devAdminLeaseStore.recoverExpired();
+      else return json(res, 400, { ok: false, message: "Unknown AI Dev Admin action." });
+      return json(res, 200, { ok: true, devAdmin: devAdminStatus() });
+    });
+    return;
+  }
   if (url.pathname === "/api/v1/bridge/workspace")
     return json(res, 200, ensureWorkspaceFile());
+  if (
+    url.pathname === "/api/v1/bridge/workspace/bootstrap" &&
+    req.method === "POST"
+  ) {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      let payload = {};
+      try {
+        payload = body ? JSON.parse(body) : {};
+      } catch {
+        return json(res, 400, { ok: false, message: "Invalid JSON payload." });
+      }
+      try {
+        return json(res, 200, bootstrapVentureWorkspace(payload));
+      } catch (error) {
+        const status =
+          error.code === "WORKSPACE_REPLACEMENT_CONFIRMATION_REQUIRED"
+            ? 409
+            : 400;
+        return json(res, status, {
+          ok: false,
+          code: error.code || "WORKSPACE_BOOTSTRAP_REJECTED",
+          message: error.message,
+        });
+      }
+    });
+    return;
+  }
+  if (
+    url.pathname === "/api/v1/bridge/bounty" &&
+    req.method === "GET" &&
+    !isTrustedLocalBridgeOrigin(req)
+  ) {
+    return json(res, 403, {
+      ok: false,
+      message: "Bounty runtime access requires a trusted local origin.",
+    });
+  }
+  if (url.pathname === "/api/v1/bridge/bounty" && req.method === "GET")
+    return json(res, 200, bountyRuntime.snapshot());
+  if (
+    url.pathname === "/api/v1/bridge/bounty/actions" &&
+    req.method === "POST"
+  ) {
+    if (!isTrustedLocalBridgeOrigin(req)) {
+      return json(res, 403, {
+        ok: false,
+        message: "Bounty runtime actions require a trusted local origin.",
+      });
+    }
+    let body = "";
+    let bodyTooLarge = false;
+    req.on("data", (chunk) => {
+      if (bodyTooLarge) return;
+      body += chunk;
+      if (body.length > 262144) {
+        bodyTooLarge = true;
+        body = "";
+      }
+    });
+    req.on("end", async () => {
+      if (bodyTooLarge) {
+        return json(res, 413, {
+          ok: false,
+          message: "Bounty action payload exceeds 256 KiB.",
+        });
+      }
+      let payload = {};
+      try {
+        payload = body ? JSON.parse(body) : {};
+      } catch {
+        return json(res, 400, {
+          ok: false,
+          message: "Invalid JSON payload.",
+        });
+      }
+      try {
+        let result;
+        switch (payload.action) {
+          case "upsert-program":
+            bountyRuntime.upsertProgram(payload.value || {});
+            break;
+          case "upsert-asset":
+            bountyRuntime.upsertAsset(payload.value || {});
+            break;
+          case "update-budgets":
+            bountyRuntime.updateBudgets(payload.value || {});
+            break;
+          case "update-goal":
+            bountyRuntime.updateGoal(payload.value || {});
+            break;
+          case "set-control":
+            bountyRuntime.setControl(payload.value || {});
+            break;
+          case "review-finding":
+            bountyRuntime.reviewFinding(payload.value || {});
+            break;
+          case "run-cycle":
+            result = await bountyRuntime.runCycle({
+              actor: "operator",
+              force: true,
+            });
+            return json(res, result.ok ? 200 : 409, result);
+          default:
+            return json(res, 400, {
+              ok: false,
+              message: "Unknown bounty action.",
+            });
+        }
+        return json(res, 200, {
+          ok: true,
+          message: "Bounty runtime state updated.",
+          snapshot: bountyRuntime.snapshot(),
+        });
+      } catch (error) {
+        return json(res, 400, {
+          ok: false,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Bounty runtime action failed.",
+        });
+      }
+    });
+    return;
+  }
   if (url.pathname === "/api/v1/bridge/message" && req.method === "POST") {
     let body = "";
     req.on("data", (chunk) => {
@@ -3002,11 +3433,31 @@ const server = http.createServer((req, res) => {
   });
 });
 
-ensureBridgeFiles();
-wake();
-server.listen(port, host, () => {
-  console.log(`EXOTIC Codex bridge runtime: http://${host}:${port}`);
-  console.log(`Bridge root: ${bridgeRoot}`);
-  console.log(`Auto tick interval: ${tickMinMs}ms (busy) - ${autoTickMs}ms (idle)`);
-  console.log(`Production Fabric concurrency: ${swarmConcurrency}`);
-});
+// Starts the bridge: seeds bridge files if needed, kicks off the tick loop, and binds the
+// HTTP port. Exported (not run unconditionally at import time) so a host process - the
+// Electron desktop app's main process, in particular - can `import` this module to run the
+// bridge in-process without an extra subprocess to manage, then call this once it's ready.
+// All the runtime's configuration (bridgeRoot, workspaceRoot, port, tick timing, worker
+// backend, ...) is still read from process.env at module-evaluation time, same as every
+// other caller in this codebase (npm run codex:live, this file's own test suite) already
+// relies on - a host process sets those env vars before importing, rather than this
+// function taking a parallel set of constructor options for the same values.
+export function startBridge() {
+  ensureBridgeFiles();
+  bountyRuntime.startScheduler(bountyTickMs);
+  wake();
+  server.once("close", () => bountyRuntime.stopScheduler());
+  server.listen(port, host, () => {
+    console.log(`EXOTIC Codex bridge runtime: http://${host}:${port}`);
+    console.log(`Bridge root: ${bridgeRoot}`);
+    console.log(`Auto tick interval: ${tickMinMs}ms (busy) - ${autoTickMs}ms (idle)`);
+    console.log(`Production Fabric concurrency: ${swarmConcurrency}`);
+  });
+  return { port, host, bridgeRoot, workspaceRoot, repoRoot, devAdminCredentialFile, server };
+}
+
+const isMainModule =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMainModule) {
+  startBridge();
+}

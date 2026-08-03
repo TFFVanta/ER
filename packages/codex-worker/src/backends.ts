@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ProductionCellContext, ProductionReceipt, ProductionWorker } from "@exotic/workflow";
 import { captureEvidence, snapshotWorkingTree } from "./evidence.js";
+import { applyFileEdits, LOCAL_EDIT_FORMAT_PROMPT, parseFileEdits } from "./apply-edits.js";
 
 // Reflects docs/AUTO_MODE_MASTER_PLAN.md's approval-gated-actions list. This is a prompt
 // instruction, not a sandbox - it relies on the invoked agent following it, the same trust
@@ -151,16 +152,15 @@ export interface LocalBackendOptions {
 }
 
 // Calls a self-hosted, OpenAI-compatible chat-completions endpoint (Ollama, LM Studio,
-// vLLM, or a future fine-tuned model served the same way all work here unmodified).
-//
-// Important limitation: this backend only requests a text completion - it does not apply
-// that text as file edits. Until it's wired to an actual edit loop (e.g. parsing the
-// response into a patch, or piping through a tool like Aider), captureEvidence will
-// almost always come back empty for real work, and packages/workflow's executeProductionFabric
-// will correctly reject the receipt for having no evidence rather than silently accepting
-// a text response as "done." That's the deliberately safe behavior for an unfinished
-// integration, not a bug: extend this once a real local/fine-tuned model and an edit loop
-// exist, rather than loosening the evidence check to accommodate it.
+// vLLM, or a future fine-tuned model served the same way all work here unmodified) and
+// applies the reply as real file edits - see apply-edits.ts. Unlike claudeBackend/
+// codexBackend, a chat-completions endpoint has no tools of its own, so the prompt
+// explicitly tells the model to reply using the EXOTIC-WRITE-FILE/EXOTIC-DELETE-FILE block
+// format, and this function parses and applies those blocks before capturing evidence.
+// A reply with no valid blocks (or a model that ignores the instruction) still produces no
+// evidence, and dispatch.ts still correctly rejects that as a failure - the same safe
+// default as before, now reachable via an actual working path instead of only the failure
+// path.
 export function localBackend(options: LocalBackendOptions): ProductionWorker<string> {
   return async (context): Promise<ProductionReceipt<string>> => {
     const endpoint = options.endpoint ?? process.env.EXOTIC_LOCAL_MODEL_ENDPOINT;
@@ -171,7 +171,7 @@ export function localBackend(options: LocalBackendOptions): ProductionWorker<str
       );
     }
     const before = snapshotWorkingTree(options.cwd);
-    const prompt = buildCellPrompt(context);
+    const prompt = `${buildCellPrompt(context)}\n\n${LOCAL_EDIT_FORMAT_PROMPT}`;
     const response = await fetch(`${endpoint.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -188,7 +188,12 @@ export function localBackend(options: LocalBackendOptions): ProductionWorker<str
       choices?: Array<{ message?: { content?: string } }>;
     };
     const output = payload.choices?.[0]?.message?.content ?? "";
+    const edits = parseFileEdits(output);
+    const { rejected } = applyFileEdits(options.cwd, edits);
     const evidence = captureEvidence({ cwd: options.cwd, before });
+    for (const reject of rejected) {
+      evidence.push(`rejected-edit ${reject.path}: ${reject.reason}`);
+    }
     return { output, evidence };
   };
 }

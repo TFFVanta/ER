@@ -4,6 +4,9 @@ export type { CaptureEvidenceOptions, CommandEvidenceResult, WorkingTreeSnapshot
 export { claudeBackend, codexBackend, localBackend, resolveBackend } from "./backends.js";
 export type { BackendName, CliBackendOptions, LocalBackendOptions } from "./backends.js";
 
+export { applyFileEdits, LOCAL_EDIT_FORMAT_PROMPT, parseFileEdits } from "./apply-edits.js";
+export type { AppliedEdit, ApplyFileEditsResult, FileEdit } from "./apply-edits.js";
+
 export { dispatchStep } from "./dispatch.js";
 export type { DispatchOptions, DispatchResult, RoadmapStepInput } from "./dispatch.js";
 

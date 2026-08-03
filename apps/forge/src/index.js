@@ -1037,7 +1037,7 @@ async function workerCommand(argv) {
       console.error(`Unknown roadmap step: ${stepId}`);
       process.exit(1);
     }
-    const backend = values.backend || process.env.EXOTIC_WORKER_BACKEND || 'claude';
+    const backend = values.backend || process.env.EXOTIC_WORKER_BACKEND || 'local';
     const { dispatchStep } = await loadWorkspacePackage('codex-worker');
     console.log(`Dispatching ${step.id} (${step.title}) to backend "${backend}"...`);
     const result = await dispatchStep(

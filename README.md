@@ -33,6 +33,29 @@ npm run test
 npm run exo -- help
 ```
 
+## Running Auto Mode Offline and Free
+
+Auto mode dispatches roadmap steps to a worker backend. By default that backend is `local`,
+which calls a self-hosted, OpenAI-compatible chat-completions server on your machine - no paid
+API key, no internet connection required once the model is downloaded.
+
+1. Install [Ollama](https://ollama.com) (or LM Studio, or any other OpenAI-compatible local
+   server) and pull a coding-capable model, e.g. `ollama pull qwen2.5-coder:7b`.
+2. Set the endpoint before starting the bridge or running `exo worker run`:
+   ```powershell
+   $env:EXOTIC_LOCAL_MODEL_ENDPOINT = "http://localhost:11434/v1"
+   $env:EXOTIC_LOCAL_MODEL_NAME = "qwen2.5-coder:7b"
+   ```
+3. Run a step: `npm run exo -- worker run <step-id>`.
+
+The local backend instructs the model to reply with `===EXOTIC-WRITE-FILE:===` /
+`===EXOTIC-DELETE-FILE:===` blocks (see `packages/codex-worker/src/apply-edits.ts`) and applies
+them as real file edits before capturing evidence - a step only counts as done if a file
+actually changed.
+
+To use a paid CLI backend instead, set `EXOTIC_WORKER_BACKEND=claude` or `codex` (requires that
+CLI installed and authenticated).
+
 ## Phone Portal
 
 `PORTAL/` is a separate, LAN-only control surface (Python + vanilla JS) for checking build
