@@ -1,0 +1,5 @@
+Build EXOTIC Continuous Operations Runtime v1.0.
+
+Integrate the Autonomy Kernel v0.1, durable persistence v0.2, event scheduler v0.3, governance runtime v0.4, resource governor v0.5, and agent allocation runtime v0.6 into one production runtime. Implement a unified bootstrap, service lifecycle manager, dependency graph, health supervision, startup ordering, clean shutdown, crash recovery, operation dashboards, system-wide audit timeline, end-to-end tracing, metrics, alerting, configuration, workspace isolation, simulation mode, emergency controls, integration tests, failure-injection tests, soak tests, CLI commands, CMake integration, Windows service support, and a complete EXOTIC v1.0 save bundle.
+
+Do not create another disconnected subsystem. Produce the integration layer that boots and operates the existing bundles as one controlled 24/7 platform. Provide a compile-oriented source bundle, exact migration and compatibility patches, one-shot Windows build commands, and a Definition of Done based on real end-to-end operation.
