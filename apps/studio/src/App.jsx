@@ -4,6 +4,7 @@ import "./App.css";
 import {
   buildWorkspaceModel,
   entityTitle,
+  entityTypeLabels,
   relatedEntities,
 } from "./workspace-model.js";
 import { bridgeBaseUrl, refreshIntervalMs, useWorkspace } from "./use-workspace.js";
@@ -260,7 +261,9 @@ export default function App() {
       <aside className="inspector">
         <div className="inspector-head">
           <span>INSPECTOR</span>
-          <strong>{selectedEntity?.type?.toUpperCase() || "VENTURE"}</strong>
+          <strong>
+            {(entityTypeLabels[selectedEntity?.type] || "Venture").toUpperCase()}
+          </strong>
         </div>
         <div className="inspector-body">
           <p className="eyebrow">SELECTED OBJECT</p>
@@ -321,7 +324,7 @@ export default function App() {
                 type="button"
                 onClick={() => setSelectedId(entity.id)}
               >
-                <span>{entity.type}</span>
+                <span>{entityTypeLabels[entity.type] || entity.type}</span>
                 <strong>{entityTitle(entity)}</strong>
               </button>
             ))}
@@ -487,8 +490,8 @@ function EntityColumn({
                 <strong>{record.title}</strong>
                 <small>
                   {type === "task"
-                    ? record.actionType
-                    : `${record.artifactType} / ${record.version}`}
+                    ? statusLabel(record.actionType)
+                    : `${statusLabel(record.artifactType)} / ${record.version}`}
                 </small>
               </span>
               <StatusBadge status={record.status} />

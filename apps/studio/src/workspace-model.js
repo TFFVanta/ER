@@ -180,8 +180,39 @@ export function relatedEntities(model, entityId) {
     .filter(Boolean);
 }
 
+export const entityTypeLabels = {
+  venture: "Venture",
+  objective: "Objective",
+  "studio-scope": "Studio Scope",
+  workflow: "Workflow",
+  task: "Task",
+  artifact: "Artifact",
+  "evidence-record": "Evidence Record",
+  decision: "Decision",
+  approval: "Approval",
+  resource: "Resource",
+  metric: "Metric",
+  "memory-record": "Memory Record",
+};
+
+function shortId(id) {
+  const segments = String(id).split("-");
+  return segments[segments.length - 1] || id;
+}
+
+// Never surfaces a raw system ID (e.g. "V-PHASE-1-FOUNDATION-1OLBNFQ-STUDIO-IDEAS")
+// as a UI heading - falls back to a readable type label instead, with a studio-specific
+// label for studio scopes since those are the entities most likely to lack a title.
 export function entityTitle(entity) {
   if (!entity) return "Nothing selected";
   const record = entity.record;
-  return record.title || record.name || record.summary || entity.id;
+  if (record.title || record.name || record.summary) {
+    return record.title || record.name || record.summary;
+  }
+  if (entity.type === "studio-scope" && record.studio) {
+    const studio = studioDefinitions.find((item) => item.id === record.studio);
+    if (studio) return `${studio.label} Studio Scope`;
+  }
+  const typeLabel = entityTypeLabels[entity.type] || "Object";
+  return `${typeLabel} ${shortId(entity.id)}`;
 }
