@@ -6,13 +6,17 @@ import {
   entityTitle,
   relatedEntities,
 } from "./workspace-model.js";
-import { bridgeBaseUrl, useWorkspace } from "./use-workspace.js";
+import { bridgeBaseUrl, refreshIntervalMs, useWorkspace } from "./use-workspace.js";
 
 const views = [
+  { id: "menu", label: "Menu", code: "00" },
   { id: "workbench", label: "Workbench", code: "01" },
   { id: "graph", label: "Graph", code: "02" },
   { id: "evidence", label: "Evidence", code: "03" },
   { id: "operations", label: "Operations", code: "04" },
+  { id: "progress", label: "Progress", code: "05" },
+  { id: "test", label: "Test", code: "06" },
+  { id: "settings", label: "Settings", code: "07" },
 ];
 
 function statusLabel(status) {
@@ -40,7 +44,7 @@ function entityIdentifier(type, record) {
 export default function App() {
   const workspaceState = useWorkspace();
   const [activeStudioId, setActiveStudioId] = useState("ideas");
-  const [activeView, setActiveView] = useState("workbench");
+  const [activeView, setActiveView] = useState("menu");
   const [selectedId, setSelectedId] = useState("");
   const [actionState, setActionState] = useState({ busy: false, message: "" });
 
@@ -111,7 +115,7 @@ export default function App() {
         <button
           className="brand"
           type="button"
-          onClick={() => setActiveView("workbench")}
+          onClick={() => setActiveView("menu")}
         >
           <img src={erLogo} alt="EXOTIC ER" />
           <span>
@@ -201,6 +205,13 @@ export default function App() {
           </div>
         </nav>
 
+        {activeView === "menu" ? (
+          <MainMenu
+            model={model}
+            bridge={workspaceState.bridge}
+            onNavigate={setActiveView}
+          />
+        ) : null}
         {activeView === "workbench" ? (
           <Workbench
             studio={activeStudio}
@@ -220,6 +231,29 @@ export default function App() {
         ) : null}
         {activeView === "operations" ? (
           <OperationsView bridge={workspaceState.bridge} model={model} />
+        ) : null}
+        {activeView === "progress" ? (
+          <ProgressView model={model} bridge={workspaceState.bridge} />
+        ) : null}
+        {activeView === "test" ? (
+          <TestView bridge={workspaceState.bridge} />
+        ) : null}
+        {activeView === "settings" ? (
+          <SettingsView
+            bridge={workspaceState.bridge}
+            autoMode={autoMode}
+            busy={actionState.busy}
+            error={workspaceState.error}
+            updatedAt={workspaceState.updatedAt}
+            onToggleAutoMode={() =>
+              runAction(async () => {
+                const nextMode = autoMode === "running" ? "paused" : "running";
+                await workspaceState.setAutoMode(nextMode);
+                return `Auto mode ${nextMode}.`;
+              })
+            }
+            onRefresh={() => runAction(workspaceState.refresh)}
+          />
         ) : null}
       </section>
 
@@ -633,6 +667,331 @@ function Metric({ label, value }) {
     <div className="metric">
       <span>{label}</span>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+function MainMenu({ model, bridge, onNavigate }) {
+  const cards = [
+    {
+      id: "workbench",
+      code: "01",
+      title: "Workbench",
+      detail: "Studio objectives, tasks, and editable outputs.",
+      stat: `${model.studios.length} studios`,
+    },
+    {
+      id: "graph",
+      code: "02",
+      title: "Graph",
+      detail: "The connected venture system map.",
+      stat: `${model.summary.graphEdges} edges`,
+    },
+    {
+      id: "evidence",
+      code: "03",
+      title: "Evidence",
+      detail: "Evidence records, decisions, and approvals.",
+      stat: `${model.summary.verifiedEvidence} verified`,
+    },
+    {
+      id: "operations",
+      code: "04",
+      title: "Operations",
+      detail: "Auto mode, execution intent, and the build roadmap.",
+      stat: bridge?.automation?.mode || "offline",
+    },
+    {
+      id: "progress",
+      code: "05",
+      title: "Progress",
+      detail: "Overall completion across studios and roadmap steps.",
+      stat: `${bridge?.metrics?.overallProgress ?? 0}% complete`,
+    },
+    {
+      id: "test",
+      code: "06",
+      title: "Test",
+      detail: "Last verification run: build, test, and console checks.",
+      stat: bridge?.verification?.status || "unverified",
+    },
+    {
+      id: "settings",
+      code: "07",
+      title: "Settings",
+      detail: "Bridge connection, repository, and automation state.",
+      stat: bridge ? "connected" : "offline",
+    },
+  ];
+
+  return (
+    <div className="main-menu">
+      <header className="workspace-head compact">
+        <div>
+          <p className="eyebrow">MAIN MENU</p>
+          <h1>{model.venture.name}</h1>
+          <p>Navigate to any section of the venture workspace.</p>
+        </div>
+      </header>
+      <div className="menu-grid">
+        {cards.map((card) => (
+          <button
+            key={card.id}
+            type="button"
+            className="menu-card"
+            onClick={() => onNavigate(card.id)}
+          >
+            <b>{card.code}</b>
+            <span className="menu-card-copy">
+              <strong>{card.title}</strong>
+              <small>{card.detail}</small>
+            </span>
+            <em>{card.stat}</em>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgressView({ model, bridge }) {
+  const metrics = bridge?.metrics;
+  const roadmap = bridge?.roadmap || [];
+  return (
+    <div className="progress-view">
+      <header className="workspace-head compact">
+        <div>
+          <p className="eyebrow">COMPLETION STATE</p>
+          <h1>Progress</h1>
+          <p>How far each studio and roadmap step has advanced.</p>
+        </div>
+        <div className="studio-score">
+          <span>OVERALL</span>
+          <strong>{metrics?.overallProgress ?? 0}%</strong>
+          <small>{metrics?.health || "unknown"}</small>
+        </div>
+      </header>
+      <div className="metric-grid">
+        <Metric label="Overall" value={`${metrics?.overallProgress ?? 0}%`} />
+        <Metric label="Completed" value={metrics?.completedSteps ?? 0} />
+        <Metric label="Running" value={metrics?.runningSteps ?? 0} />
+        <Metric label="Pending" value={metrics?.pendingSteps ?? 0} />
+      </div>
+      <section className="studio-progress-list">
+        <header>
+          <span>STUDIO COMPLETION</span>
+          <strong>{model.studios.length}</strong>
+        </header>
+        {model.studios.map((studio) => (
+          <div key={studio.id} className="studio-progress-row">
+            <b>{studio.code}</b>
+            <span className="studio-progress-copy">
+              <strong>{studio.label}</strong>
+              <small>
+                {studio.activeCount} active / {studio.blockedCount} blocked
+              </small>
+            </span>
+            <progress max="100" value={studio.progress} />
+            <em>{studio.progress}%</em>
+          </div>
+        ))}
+      </section>
+      <section className="roadmap-table">
+        <header>
+          <span>BUILD ROADMAP</span>
+          <strong>{roadmap.length} STEPS</strong>
+        </header>
+        {roadmap.map((step) => (
+          <div
+            key={step.id}
+            className={step.status === "running" ? "running" : ""}
+          >
+            <code>{step.id}</code>
+            <span>
+              <strong>{step.title}</strong>
+              <small>{step.status}</small>
+            </span>
+            <progress max="100" value={step.progress || 0} />
+            <b>{step.progress || 0}%</b>
+          </div>
+        ))}
+        {!roadmap.length ? <p className="empty-row">No roadmap steps loaded.</p> : null}
+      </section>
+    </div>
+  );
+}
+
+function TestView({ bridge }) {
+  const verification = bridge?.verification;
+
+  if (!verification) {
+    return (
+      <div className="test-view">
+        <header className="workspace-head compact">
+          <div>
+            <p className="eyebrow">VERIFICATION</p>
+            <h1>Test</h1>
+            <p>No verification run has been recorded yet.</p>
+          </div>
+        </header>
+        <EmptyState
+          title="No verification evidence"
+          detail="Run npm run verify from the workspace root to produce a verification record."
+        />
+      </div>
+    );
+  }
+
+  const buildFailures = verification.build?.failures || [];
+  const testFailures = verification.test?.failures || [];
+
+  return (
+    <div className="test-view">
+      <header className="workspace-head compact">
+        <div>
+          <p className="eyebrow">VERIFICATION</p>
+          <h1>Test</h1>
+          <p>Last recorded result of {verification.command || "the verification command"}.</p>
+        </div>
+        <div className="studio-score">
+          <span>STATUS</span>
+          <strong className="mode-text">{verification.status}</strong>
+          <small>{formatTime(verification.verifiedAt)}</small>
+        </div>
+      </header>
+      <div className="metric-grid">
+        <Metric
+          label="Build"
+          value={`${verification.build?.passed ?? 0}/${verification.build?.total ?? 0}`}
+        />
+        <Metric
+          label="Test"
+          value={`${verification.test?.passed ?? 0}/${verification.test?.total ?? 0}`}
+        />
+        <Metric label="Total tasks" value={verification.totalTasks ?? 0} />
+        <Metric
+          label="Console runtime"
+          value={verification.console?.isolatedRuntime || "unknown"}
+        />
+      </div>
+      <section className="test-failures">
+        <header>
+          <span>BUILD FAILURES</span>
+          <strong>{buildFailures.length}</strong>
+        </header>
+        {buildFailures.map((failure, index) => (
+          <p key={index}>{typeof failure === "string" ? failure : JSON.stringify(failure)}</p>
+        ))}
+        {!buildFailures.length ? <p className="empty-row">No build failures.</p> : null}
+      </section>
+      <section className="test-failures">
+        <header>
+          <span>TEST FAILURES</span>
+          <strong>{testFailures.length}</strong>
+        </header>
+        {testFailures.map((failure, index) => (
+          <p key={index}>{typeof failure === "string" ? failure : JSON.stringify(failure)}</p>
+        ))}
+        {!testFailures.length ? <p className="empty-row">No test failures.</p> : null}
+      </section>
+    </div>
+  );
+}
+
+function SettingsView({
+  bridge,
+  autoMode,
+  busy,
+  error,
+  updatedAt,
+  onToggleAutoMode,
+  onRefresh,
+}) {
+  const repo = bridge?.repo;
+  return (
+    <div className="settings-view">
+      <header className="workspace-head compact">
+        <div>
+          <p className="eyebrow">SYSTEM</p>
+          <h1>Settings</h1>
+          <p>Bridge connection, automation, and repository state.</p>
+        </div>
+      </header>
+      <div className="settings-grid">
+        <section className="settings-section">
+          <header>
+            <span>CONNECTION</span>
+          </header>
+          <div className="settings-row">
+            <dt>Bridge URL</dt>
+            <dd>{bridgeBaseUrl}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Sync</dt>
+            <dd>{error ? "degraded" : "live"}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Last synced</dt>
+            <dd>{updatedAt ? formatTime(updatedAt) : "not synced"}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Refresh interval</dt>
+            <dd>{Math.round(refreshIntervalMs / 1000)}s</dd>
+          </div>
+          <div className="settings-actions">
+            <button type="button" disabled={busy} onClick={onRefresh}>
+              REFRESH NOW
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <header>
+            <span>AUTOMATION</span>
+          </header>
+          <div className="settings-row">
+            <dt>Auto mode</dt>
+            <dd>{autoMode}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Detail</dt>
+            <dd>{bridge?.automation?.detail || "unknown"}</dd>
+          </div>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className={autoMode === "running" ? "mode-running" : ""}
+              disabled={busy}
+              onClick={onToggleAutoMode}
+            >
+              {autoMode === "running" ? "PAUSE AUTO" : "START AUTO"}
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <header>
+            <span>REPOSITORY</span>
+          </header>
+          <div className="settings-row">
+            <dt>Workspace</dt>
+            <dd>{repo?.workspace || "unknown"}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Branch</dt>
+            <dd>{repo?.branch || "unknown"}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Changed files</dt>
+            <dd>{repo?.changedFiles ?? 0}</dd>
+          </div>
+          <div className="settings-row">
+            <dt>Untracked files</dt>
+            <dd>{repo?.untrackedFiles ?? 0}</dd>
+          </div>
+          {repo?.summary ? <p className="settings-note">{repo.summary}</p> : null}
+        </section>
+      </div>
     </div>
   );
 }

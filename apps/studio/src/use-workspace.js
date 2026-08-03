@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 export const bridgeBaseUrl =
   import.meta.env.VITE_EXOTIC_BRIDGE_URL || "http://127.0.0.1:8787";
 
+export const refreshIntervalMs = 15000;
+
 async function request(path, options = {}) {
   const response = await fetch(`${bridgeBaseUrl}${path}`, {
     ...options,
@@ -54,7 +56,7 @@ export function useWorkspace() {
 
   useEffect(() => {
     refresh();
-    const interval = window.setInterval(refresh, 15000);
+    const interval = window.setInterval(refresh, refreshIntervalMs);
     return () => window.clearInterval(interval);
   }, []);
 
